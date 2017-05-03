@@ -66,18 +66,21 @@ class Lexer:
 
     def __init__(self, text):
         self.text = text
-        self.index = 0
+        self.index = None
         self.char = None
         self.category = None
         self.value = None
         self.next_char()
 
     def next_char(self):
+        if self.index is None:
+            self.index = 0
+        else:
+            self.index += 1
         if self.index >= len(self.text):
             self.char = ''
         else:
             self.char = self.text[self.index]
-            self.index += 1
 
     def next_token(self):
         self.value = None
@@ -116,6 +119,73 @@ class Lexer:
                     self.value = None
                 else:
                     self.category = Lexer.IDENTIFIER
+            elif self.char == "'":
+                start = self.index
+                self.value = ''
+                self.next_char()
+                while self.char and self.char != "'":
+                    if self.char == '\\':
+                        self.next_char()
+                        if self.char == 'n':
+                            self.value += '\n'
+                            self.next_char()
+                            continue
+                        elif self.char == 't':
+                            self.value += '\t'
+                            self.next_char()
+                            continue
+                    self.value += self.char
+                    self.next_char()
+                if self.char == "'":
+                    if self.value:
+                        self.category = Lexer.SYMBOL_LITERAL
+                    else:
+                        self.category = self.ERROR
+                    self.next_char()
+                else:
+                    self.value = self.text[start:]
+                    self.category = Lexer.ERROR
+            elif self.char == '"':
+                start = self.index
+                caret_index = 0
+                vbar_count = 0
+                meet_caret = False
+                caret_error = False
+                self.value = ''
+                self.next_char()
+                while self.char and self.char != '"':
+                    if self.char == '^':
+                        if meet_caret:
+                            caret_error = True
+                        else:
+                            meet_caret = True
+                            caret_index = vbar_count
+                        self.next_char()
+                        continue
+                    if self.char == '|':
+                        vbar_count += 1
+                    if self.char == '\\':
+                        self.next_char()
+                        if self.char == 'n':
+                            self.value += '\n'
+                            self.next_char()
+                            continue
+                        elif self.char == 't':
+                            self.value += '\t'
+                            self.next_char()
+                            continue
+                    self.value += self.char
+                    self.next_char()
+                if self.char == '"':
+                    if self.value and not caret_error:
+                        self.category = Lexer.TAPE_LITERAL
+                        self.value = self.value.split('|'), caret_index
+                    else:
+                        self.category = self.ERROR
+                    self.next_char()
+                else:
+                    self.value = self.text[start:]
+                    self.category = Lexer.ERROR
             else:
                 if self.char not in Lexer.two_char_special_symbols and self.char in Lexer.one_char_special_symbols:
                     self.category = Lexer.special_symbols[self.char]
