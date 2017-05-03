@@ -30,7 +30,7 @@ class Lexer:
         IF, ELIF, ELSE, WHILE,
         INDENT, DEDENT, # todo
         INPUT, OUTPUT,
-        NEW_LINE, EOF, ERROR, # todo
+        NEW_LINE, EOF, ERROR,
     ) = range(len(tokens))
 
     # special symbols
@@ -86,10 +86,19 @@ class Lexer:
             if not self.char:
                 self.category = Lexer.EOF
             elif self.char == '\n':
-                category = Lexer.NEW_LINE
-                self.next_char()
+                while self.char == '\n':
+                    self.next_char()
+                self.category = Lexer.NEW_LINE
             elif self.char.isspace():
                 self.next_char()
+            elif self.char == '\\':
+                self.value = self.char
+                self.next_char()
+                self.value += self.char
+                if self.value != '\\\n':
+                    self.category = Lexer.ERROR
+                else:
+                    self.next_char()
             elif self.char.isdecimal():
                 self.value = 0
                 while self.char.isdecimal():  # todo: check overflow
