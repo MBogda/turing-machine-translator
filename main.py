@@ -8,11 +8,7 @@ if __name__ == '__main__':
         program_text = file.read()
 
     lexer = Lexer(program_text)
-    while True:
+    lexer.next_token()
+    while lexer.token:
+        print(lexer.token)
         lexer.next_token()
-        print(lexer.tokens[lexer.category], lexer.value)
-        if lexer.category == Lexer.EOF:
-            break
-
-# todo: добавить инденты и комменты
-# todo: добавить символы и строки
