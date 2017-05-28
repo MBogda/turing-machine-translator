@@ -12,6 +12,7 @@ class Lexer:
     # tokens
     token_specification = [
         ('COMMENT',                 r'/\*(?:.|\n)*\*/|//.*$'),
+        ('KEYWORD',                 r'|'.join(keyword for keyword in keywords)),
         ('IDENTIFIER',              r'[a-zA-Z_][a-zA-Z_0-9]*'),
         ('INTEGER_LITERAL',         r'-?[0-9]+'),
         ('LEFT_BRACE',              r'\{'),
@@ -104,4 +105,4 @@ class Lexer:
             else:
                 self.token = None
 
-# todo: change identifiers to keywords
+# todo? refactor to use yield
