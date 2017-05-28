@@ -30,8 +30,9 @@ class Lexer:
         ('TAPE_LITERAL',            r'"(?:\\.|[^\\"\n])*"'),
         ('COMPARISON_OPERATOR',     r'==|!=|<=|>=|<|>'),
         ('ASSIGNMENT_OPERATOR',     r'='),
-        ('NEWLINE',                 r'\n'),
+        ('BLANK_LINE',              r'^[ \t]*\n'),
         ('LINE_CONTINUATION',       r'\\\n'),
+        ('NEWLINE',                 r'\n'),
         ('INDENT',                  r'^[ \t]+'),
         ('BLANK',                   r'[ \t]+'),
         ('UNDEFINED',               r'.'),
@@ -63,7 +64,7 @@ class Lexer:
             value = self.mo.group(type_)
             if self.token and self.token.type == 'LINE_CONTINUATION' and type_ == 'INDENT':
                 type_ = 'BLANK'
-            if self.token and self.token.type == 'NEWLINE' and type_ != 'INDENT':
+            if self.token and self.token.type == 'NEWLINE' and type_ not in ('INDENT', 'BLANK_LINE'):
                 if self.indent_stack:
                     self.dedent_count = len(self.indent_stack)
                     continue
@@ -87,11 +88,11 @@ class Lexer:
                         else:
                             type_ = 'INDENTATION_ERROR'
             self.token = Token(type_, value, self.line_num, self.mo.start() - self.line_start + 1)
-            if type_ in ('NEWLINE', 'LINE_CONTINUATION'):
+            if type_ in ('NEWLINE', 'LINE_CONTINUATION', 'BLANK_LINE'):
                 self.line_start = self.mo.end()
                 self.line_num += 1
             self.mo = self.rg.match(self.text, self.mo.end())
-            if type_ not in ('BLANK', 'LINE_CONTINUATION'):
+            if type_ not in ('BLANK', 'LINE_CONTINUATION', 'BLANK_LINE'):
                 break
         else:
             if self.indent_stack:

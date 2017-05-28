@@ -1,12 +1,16 @@
 a = 1
 b = 10
+
+
+
 while a < b:
     a += 1
     b *= 2
     if b >= 500:
         b = 1
-
-  in
+    
+        jj = 2
+in
    kuku
  vasya!
 	armen!
