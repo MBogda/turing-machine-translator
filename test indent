@@ -1,0 +1,23 @@
+a = 1
+b = 10
+while a < b:
+    a += 1
+    b *= 2
+    if b >= 500:
+        b = 1
+
+  in
+   kuku
+ vasya!
+	armen!
+num_of_dedents = 2
+if a == 3:
+    b = 4
+    if b == 5:
+        c = 10
+        while c == 10:
+            c = 9
+        if c == 100:
+            d = 5
+    while true:
+        << 'kuku'

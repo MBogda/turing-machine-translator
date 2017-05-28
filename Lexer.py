@@ -47,11 +47,45 @@ class Lexer:
         self.mo = self.rg.match(self.text)
         self.line_num = 1
         self.line_start = 0
+        self.indent_stack = []
+        self.dedent_count = 0
 
     def next_token(self):
         while self.mo:
+            if self.dedent_count:
+                self.dedent_count -= 1
+                self.token = Token(
+                    'DEDENT', self.indent_stack.pop(),
+                    self.line_num, self.mo.start() - self.line_start + 1
+                )
+                return
             type_ = self.mo.lastgroup
             value = self.mo.group(type_)
+            if self.token and self.token.type == 'LINE_CONTINUATION' and type_ == 'INDENT':
+                type_ = 'BLANK'
+            if self.token and self.token.type == 'NEWLINE' and type_ != 'INDENT':
+                if self.indent_stack:
+                    self.dedent_count = len(self.indent_stack)
+                    continue
+            if type_ == 'INDENT':
+                if not self.indent_stack:
+                    self.indent_stack.append(value)
+                else:
+                    last_indent = self.indent_stack[-1]
+                    if value == last_indent:
+                        type_ = 'BLANK'
+                    elif value.startswith(last_indent):
+                        self.indent_stack.append(value)
+                    else:
+                        if last_indent.startswith(value):
+                            for idx, indent in enumerate(self.indent_stack):
+                                if value == indent:
+                                    self.dedent_count = len(self.indent_stack) - idx - 1
+                                    break
+                        if self.dedent_count:
+                            continue
+                        else:
+                            type_ = 'INDENTATION_ERROR'
             self.token = Token(type_, value, self.line_num, self.mo.start() - self.line_start + 1)
             if type_ in ('NEWLINE', 'LINE_CONTINUATION'):
                 self.line_start = self.mo.end()
@@ -60,6 +94,13 @@ class Lexer:
             if type_ not in ('BLANK', 'LINE_CONTINUATION'):
                 break
         else:
-            self.token = None
+            if self.indent_stack:
+                self.token = Token(
+                    'DEDENT', self.indent_stack.pop(),
+                    self.line_num, 1
+                )
+                return
+            else:
+                self.token = None
 
-# todo: indent and dedent
+# todo: change identifiers to keywords
