@@ -61,7 +61,7 @@ class Lexer:
                     'DEDENT', self.indent_stack.pop(),
                     self.line_num, self.mo.start() - self.line_start + 1
                 )
-                return
+                return self.token
             type_ = self.mo.lastgroup
             value = self.mo.group(type_)
             if self.token and self.token.type == 'LINE_CONTINUATION' and type_ == 'INDENT':
@@ -102,15 +102,14 @@ class Lexer:
             self.mo = self.rg.match(self.text, self.mo.end())
             if type_ not in (
                     'BLANK', 'LINE_CONTINUATION', 'BLANK_LINE', 'UNDEFINED_TOKEN', 'INDENTATION_ERROR'):
-                break
+                return self.token
         else:
             if self.indent_stack:
                 self.token = Token(
                     'DEDENT', self.indent_stack.pop(),
                     self.line_num, 1
                 )
-                return
+                return self.token
             else:
                 self.token = None
-
-# todo? refactor to use yield
+                return self.token
