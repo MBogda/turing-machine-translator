@@ -38,7 +38,7 @@ class Lexer:
         ('NEWLINE',                 r'\n'),
         ('INDENT',                  r'^[ \t]+'),
         ('BLANK',                   r'[ \t]+'),
-        ('UNDEFINED_TOKEN',               r'.'),
+        ('UNDEFINED_TOKEN',         r'.'),
     ]
 
     token_specification = '|'.join('(?P<{}>{})'.format(*spec) for spec in token_specification)
