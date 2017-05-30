@@ -2,6 +2,7 @@ import sys
 
 from error import init_program_text
 from lexer import Lexer
+from parser import Parser
 
 
 def main():
@@ -19,11 +20,13 @@ def main():
 
     init_program_text(program_text)
 
-    lexer = Lexer(program_text)
-    token = lexer.next_token()
-    while token:
-        # print(token)
-        token = lexer.next_token()
+    # lexer = Lexer(program_text)
+    # token = lexer.next_token()
+    # while token:
+    #     # print(token)
+    #     token = lexer.next_token()
+    parser = Parser(Lexer(program_text))
+    parser.parse()
 
 if __name__ == '__main__':
     main()
