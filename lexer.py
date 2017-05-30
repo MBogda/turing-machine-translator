@@ -1,6 +1,8 @@
 import collections
 import re
 
+from error import generate_error
+
 
 Token = collections.namedtuple('Token', ['type', 'value', 'line', 'column'])
 
@@ -36,14 +38,13 @@ class Lexer:
         ('NEWLINE',                 r'\n'),
         ('INDENT',                  r'^[ \t]+'),
         ('BLANK',                   r'[ \t]+'),
-        ('UNDEFINED',               r'.'),
+        ('UNDEFINED_TOKEN',               r'.'),
     ]
 
     token_specification = '|'.join('(?P<{}>{})'.format(*spec) for spec in token_specification)
     rg = re.compile(token_specification, re.MULTILINE)
 
     def __init__(self, text):
-        # self.text = text.replace('\\\n', '')    # line continuation
         self.text = text
         self.token = None
         self.mo = self.rg.match(self.text)
@@ -92,8 +93,15 @@ class Lexer:
             if type_ in ('NEWLINE', 'LINE_CONTINUATION', 'BLANK_LINE'):
                 self.line_start = self.mo.end()
                 self.line_num += 1
+            if type_ == 'UNDEFINED_TOKEN':
+                generate_error(
+                    'Lexer', "Undefinded token '{}'".format(self.token.value),
+                    self.token.line, self.token.column)
+            if type_ == 'INDENTATION_ERROR':
+                generate_error('Lexer', 'Indentation error', self.token.line, self.token.column)
             self.mo = self.rg.match(self.text, self.mo.end())
-            if type_ not in ('BLANK', 'LINE_CONTINUATION', 'BLANK_LINE'):
+            if type_ not in (
+                    'BLANK', 'LINE_CONTINUATION', 'BLANK_LINE', 'UNDEFINED_TOKEN', 'INDENTATION_ERROR'):
                 break
         else:
             if self.indent_stack:
