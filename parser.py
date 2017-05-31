@@ -19,32 +19,32 @@ class Parser:
             self.program()
 
     def instruction(self):
-        if self.token.type == 'KEYWORD' and self.token.value == 'if':
+        if self.token.type == 'IF':
             pass
         # elif ...
 
     def integer_expression(self):
         self.integer_term()
-        while self.token.type == 'ARITHMETIC_OPERATOR' and self.token.value in ['+', '-']:
-            self.accept('ARITHMETIC_OPERATOR')
+        while self.token.type in ['PLUS', 'MINUS']:
+            self.accept(self.token.type)
             self.integer_term()
 
     def integer_term(self):
         self.integer_multiplier()
-        while self.token.type == 'ARITHMETIC_OPERATOR' and self.token.value in ['*', '/', '%']:
-            self.accept('ARITHMETIC_OPERATOR')
+        while self.token.type in ['MULTIPLY', 'DIVIDE', 'MODULO']:
+            self.accept(self.token.type)
             self.integer_multiplier()
 
     def integer_multiplier(self):
-        if self.token.type == 'ARITHMETIC_OPERATOR' and self.token.value == '-':
-            self.accept('ARITHMETIC_OPERATOR')
+        if self.token.type == 'MINUS':
+            self.accept('MINUS')
 
         if self.token.type == 'IDENTIFIER':
             self.accept('IDENTIFIER')
         elif self.token.type == 'INTEGER_LITERAL':
             self.accept('INTEGER_LITERAL')
-        elif self.token.type == 'INPUT_OPERATOR' and self.token.value == '>i':
-            self.accept('INPUT_OPERATOR')
+        elif self.token.type == 'INPUT_INTEGER':
+            self.accept('INPUT_INTEGER')
         elif self.token.type == 'LEFT_BRACKET':
             self.accept('LEFT_BRACKET')
             self.integer_expression()
