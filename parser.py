@@ -1,4 +1,5 @@
 from error import generate_error
+from lexer import Token
 
 
 class Parser:
@@ -18,13 +19,14 @@ class Parser:
             self.instruction()
 
     def instruction(self):
-        if self.token.type == 'IF':
+        if self.token.type == Token.IF:
             self.if_()
-        elif self.token.type == 'WHILE':
+        elif self.token.type == Token.WHILE:
             self.while_()
-        elif self.token.type in ['OUTPUT_BOOLEAN', 'OUTPUT_INTEGER', 'OUTPUT_SYMBOL', 'OUTPUT_TAPE', 'OUTPUT_ANY']:
+        elif self.token.type in [Token.OUTPUT_BOOLEAN, Token.OUTPUT_INTEGER, Token.OUTPUT_SYMBOL,
+                                 Token.OUTPUT_TAPE, Token.OUTPUT_ANY]:
             self.output()
-        elif self.token.type == 'IDENTIFIER':
+        elif self.token.type == Token.IDENTIFIER:
             self.assignment()
         else:
             generate_error(
@@ -34,75 +36,75 @@ class Parser:
                 self.token.line, self.token.column)
 
     def if_(self):
-        self.accept('IF')
+        self.accept(Token.IF)
         self.boolean_expression()
-        self.accept('COLON')
-        self.accept('NEWLINE')  # todo? add one-line if
+        self.accept(Token.COLON)
+        self.accept(Token.NEWLINE)  # todo? add one-line if
         self.block_of_instructions()
 
     def while_(self):
-        self.accept('WHILE')
+        self.accept(Token.WHILE)
         self.boolean_expression()
-        self.accept('COLON')
-        self.accept('NEWLINE')
+        self.accept(Token.COLON)
+        self.accept(Token.NEWLINE)
         self.block_of_instructions()
 
     def block_of_instructions(self): pass
 
     def output(self):
-        if self.token.type == 'OUTPUT_BOOLEAN':
-            self.accept('OUTPUT_BOOLEAN')
+        if self.token.type == Token.OUTPUT_BOOLEAN:
+            self.accept(Token.OUTPUT_BOOLEAN)
             self.boolean_expression()
-        elif self.token.type == 'OUTPUT_INTEGER':
-            self.accept('OUTPUT_INTEGER')
+        elif self.token.type == Token.OUTPUT_INTEGER:
+            self.accept(Token.OUTPUT_INTEGER)
             self.integer_expression()
-        elif self.token.type == 'OUTPUT_SYMBOL':
-            self.accept('OUTPUT_SYMBOL')
+        elif self.token.type == Token.OUTPUT_SYMBOL:
+            self.accept(Token.OUTPUT_SYMBOL)
             self.symbol_expression()
-        elif self.token.type == 'OUTPUT_TAPE':
-            self.accept('OUTPUT_TAPE')
+        elif self.token.type == Token.OUTPUT_TAPE:
+            self.accept(Token.OUTPUT_TAPE)
             self.tape_expression()
-        elif self.token.type == 'OUTPUT_ANY':   # ???
-            self.accept('OUTPUT_ANY')
+        elif self.token.type == Token.OUTPUT_ANY:   # ???
+            self.accept(Token.OUTPUT_ANY)
             self.any_expression()
 
     def assignment(self):
-        self.accept('IDENTIFIER')
-        if self.token.type == 'LEFT_SQUARE_BRACKET':
-            self.accept('LEFT_SQUARE_BRACKET')
+        self.accept(Token.IDENTIFIER)
+        if self.token.type == Token.LEFT_SQUARE_BRACKET:
+            self.accept(Token.LEFT_SQUARE_BRACKET)
             self.integer_expression()
-            self.accept('RIGHT_SQUARE_BRACKET')
-        self.accept('ASSIGNMENT')
+            self.accept(Token.RIGHT_SQUARE_BRACKET)
+        self.accept(Token.ASSIGNMENT)
         # todo ...
 
     def boolean_expression(self): pass
 
     def integer_expression(self):
         self.integer_term()
-        while self.token.type in ['PLUS', 'MINUS']:
+        while self.token.type in [Token.PLUS, Token.MINUS]:
             self.accept(self.token.type)
             self.integer_term()
 
     def integer_term(self):
         self.integer_multiplier()
-        while self.token.type in ['MULTIPLY', 'DIVIDE', 'MODULO']:
+        while self.token.type in [Token.MULTIPLY, Token.DIVIDE, Token.MODULO]:
             self.accept(self.token.type)
             self.integer_multiplier()
 
     def integer_multiplier(self):
-        if self.token.type == 'MINUS':
-            self.accept('MINUS')
+        if self.token.type == Token.MINUS:
+            self.accept(Token.MINUS)
 
-        if self.token.type == 'IDENTIFIER':
-            self.accept('IDENTIFIER')
-        elif self.token.type == 'INTEGER_LITERAL':
-            self.accept('INTEGER_LITERAL')
-        elif self.token.type == 'INPUT_INTEGER':
-            self.accept('INPUT_INTEGER')
-        elif self.token.type == 'LEFT_BRACKET':
-            self.accept('LEFT_BRACKET')
+        if self.token.type == Token.IDENTIFIER:
+            self.accept(Token.IDENTIFIER)
+        elif self.token.type == Token.INTEGER_LITERAL:
+            self.accept(Token.INTEGER_LITERAL)
+        elif self.token.type == Token.INPUT_INTEGER:
+            self.accept(Token.INPUT_INTEGER)
+        elif self.token.type == Token.LEFT_BRACKET:
+            self.accept(Token.LEFT_BRACKET)
             self.integer_expression()
-            self.accept('RIGHT_BRACKET')
+            self.accept(Token.RIGHT_BRACKET)
         else:
             generate_error(
                 'Parser',
@@ -118,7 +120,7 @@ class Parser:
 
     def parse(self):
         self.integer_expression()
-        if self.token.type == 'NEWLINE':
+        if self.token.type == Token.NEWLINE:
             print('OK')
         else:
             generate_error('Parser', self.token, self.token.line, self.token.column)
