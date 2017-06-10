@@ -14,14 +14,68 @@ class Parser:
                            self.token.line, self.token.column)
 
     def program(self):
-        self.instruction()
-        if self.token:
-            self.program()
+        while self.token:
+            self.instruction()
 
     def instruction(self):
         if self.token.type == 'IF':
-            pass
-        # elif ...
+            self.if_()
+        elif self.token.type == 'WHILE':
+            self.while_()
+        elif self.token.type in ['OUTPUT_BOOLEAN', 'OUTPUT_INTEGER', 'OUTPUT_SYMBOL', 'OUTPUT_TAPE', 'OUTPUT_ANY']:
+            self.output()
+        elif self.token.type == 'IDENTIFIER':
+            self.assignment()
+        else:
+            generate_error(
+                'Parser',
+                'expected IF or WHILE or OUTPUT or IDENTIFIER, got {}'.format(
+                    self.token.type),
+                self.token.line, self.token.column)
+
+    def if_(self):
+        self.accept('IF')
+        self.boolean_expression()
+        self.accept('COLON')
+        self.accept('NEWLINE')  # todo? add one-line if
+        self.block_of_instructions()
+
+    def while_(self):
+        self.accept('WHILE')
+        self.boolean_expression()
+        self.accept('COLON')
+        self.accept('NEWLINE')
+        self.block_of_instructions()
+
+    def block_of_instructions(self): pass
+
+    def output(self):
+        if self.token.type == 'OUTPUT_BOOLEAN':
+            self.accept('OUTPUT_BOOLEAN')
+            self.boolean_expression()
+        elif self.token.type == 'OUTPUT_INTEGER':
+            self.accept('OUTPUT_INTEGER')
+            self.integer_expression()
+        elif self.token.type == 'OUTPUT_SYMBOL':
+            self.accept('OUTPUT_SYMBOL')
+            self.symbol_expression()
+        elif self.token.type == 'OUTPUT_TAPE':
+            self.accept('OUTPUT_TAPE')
+            self.tape_expression()
+        elif self.token.type == 'OUTPUT_ANY':   # ???
+            self.accept('OUTPUT_ANY')
+            self.any_expression()
+
+    def assignment(self):
+        self.accept('IDENTIFIER')
+        if self.token.type == 'LEFT_SQUARE_BRACKET':
+            self.accept('LEFT_SQUARE_BRACKET')
+            self.integer_expression()
+            self.accept('RIGHT_SQUARE_BRACKET')
+        self.accept('ASSIGNMENT')
+        # todo ...
+
+    def boolean_expression(self): pass
 
     def integer_expression(self):
         self.integer_term()
@@ -55,6 +109,12 @@ class Parser:
                 'expected IDENTIFIER or INTEGER_LITERAL or INPUT_OPERATOR or LEFT_BRACKET, got {}'.format(
                     self.token.type),
                 self.token.line, self.token.column)
+
+    def symbol_expression(self): pass
+
+    def tape_expression(self): pass
+
+    def any_expression(self): pass
 
     def parse(self):
         self.integer_expression()

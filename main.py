@@ -14,7 +14,7 @@ def main():
     try:
         with open(program_file, 'r') as file:
             program_text = file.read()
-    except FileNotFoundError as ex:
+    except FileNotFoundError:
         print("No such file: '{}'".format(program_file))
         return
 
