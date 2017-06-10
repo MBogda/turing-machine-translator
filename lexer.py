@@ -162,5 +162,5 @@ class Lexer:
                 generate_error('Lexer', 'Indentation error', self.token.line, self.token.column)
             self.mo = self.rg.match(self.text, self.mo.end())
             if type_ not in (Token.BLANK, Token.LINE_CONTINUATION, Token.BLANK_LINE,
-                             Token.UNDEFINED_TOKEN, Token.INDENTATION_ERROR):
+                             Token.UNDEFINED_TOKEN, Token.INDENTATION_ERROR, Token.COMMENT):
                 return self.token
