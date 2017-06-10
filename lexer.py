@@ -70,7 +70,10 @@ token_specification = [
     ('INDENT',                  r'^[ \t]+'),
     ('BLANK',                   r'[ \t]+'),
     ('UNDEFINED_TOKEN',         r'.'),
-    ('NONE',                    r'')
+
+    ('END_OF_FILE',             r''),
+    ('DEDENT',                  r''),
+    ('INDENTATION_ERROR',       r''),
 ]
 
 
@@ -81,7 +84,7 @@ class Token:
      HEAD_MINUS, HEAD_MULTIPLY, HEAD_DIVIDE, HEAD_MODULO, INPUT_BOOLEAN, INPUT_INTEGER, INPUT_SYMBOL, INPUT_TAPE,
      OUTPUT_BOOLEAN, OUTPUT_INTEGER, OUTPUT_SYMBOL, OUTPUT_TAPE, OUTPUT_ANY, SYMBOL_LITERAL, TAPE_LITERAL, EQUAL,
      NOT_EQUAL, LESS_OR_EQUAL, GREATER_OR_EQUAL, LESS, GREATER, ASSIGNMENT, BLANK_LINE, LINE_CONTINUATION, NEWLINE,
-     INDENT, BLANK, UNDEFINED_TOKEN, NONE) = [token[0] for token in token_specification]
+     INDENT, BLANK, UNDEFINED_TOKEN, END_OF_FILE, DEDENT, INDENTATION_ERROR) = [token[0] for token in token_specification]
 
     def __init__(self, type_, value, line, column):
         self.type = type_
@@ -90,7 +93,7 @@ class Token:
         self.column = column
 
     def __bool__(self):
-        return self.type != Token.NONE
+        return self.type != Token.END_OF_FILE
 
     def __str__(self):
         return 'Token: type={}, value={}, line={}, column={}'.format(
@@ -104,7 +107,7 @@ class Lexer:
 
     def __init__(self, text):
         self.text = text
-        self.token = Token(Token.NONE, '', 0, 0)
+        self.token = Token(Token.END_OF_FILE, '', 0, 0)
         self.mo = self.rg.match(self.text)
         self.line_num = 1
         self.line_start = 0
@@ -112,29 +115,29 @@ class Lexer:
         self.dedent_count = 0
 
     def next_token(self):
-        while self.mo:
+        while True:
             if self.dedent_count:
                 self.dedent_count -= 1
                 self.token = Token(
-                    'DEDENT', self.indent_stack.pop(),
+                    Token.DEDENT, self.indent_stack.pop(),
                     self.line_num, self.mo.start() - self.line_start + 1
                 )
                 return self.token
             type_ = self.mo.lastgroup
             value = self.mo.group(type_)
-            if self.token and self.token.type == 'LINE_CONTINUATION' and type_ == 'INDENT':
-                type_ = 'BLANK'
-            if self.token and self.token.type == 'NEWLINE' and type_ not in ('INDENT', 'BLANK_LINE'):
+            if self.token.type == Token.LINE_CONTINUATION and type_ == Token.INDENT:
+                type_ = Token.BLANK
+            if self.token and self.token.type == Token.NEWLINE and type_ not in (Token.INDENT, Token.BLANK_LINE):
                 if self.indent_stack:
                     self.dedent_count = len(self.indent_stack)
                     continue
-            if type_ == 'INDENT':
+            if type_ == Token.INDENT:
                 if not self.indent_stack:
                     self.indent_stack.append(value)
                 else:
                     last_indent = self.indent_stack[-1]
                     if value == last_indent:
-                        type_ = 'BLANK'
+                        type_ = Token.BLANK
                     elif value.startswith(last_indent):
                         self.indent_stack.append(value)
                     else:
@@ -146,28 +149,18 @@ class Lexer:
                         if self.dedent_count:
                             continue
                         else:
-                            type_ = 'INDENTATION_ERROR'
+                            type_ = Token.INDENTATION_ERROR
             self.token = Token(getattr(Token, type_), value, self.line_num, self.mo.start() - self.line_start + 1)
-            if type_ in ('NEWLINE', 'LINE_CONTINUATION', 'BLANK_LINE'):
+            if type_ in (Token.NEWLINE, Token.LINE_CONTINUATION, Token.BLANK_LINE):
                 self.line_start = self.mo.end()
                 self.line_num += 1
-            if type_ == 'UNDEFINED_TOKEN':
+            if type_ == Token.UNDEFINED_TOKEN:
                 generate_error(
-                    'Lexer', "Undefinded token '{}'".format(self.token.value),
+                    'Lexer', "Undefined token {}".format(repr(self.token.value)),
                     self.token.line, self.token.column)
-            if type_ == 'INDENTATION_ERROR':
+            if type_ == Token.INDENTATION_ERROR:
                 generate_error('Lexer', 'Indentation error', self.token.line, self.token.column)
             self.mo = self.rg.match(self.text, self.mo.end())
-            if type_ not in (
-                    'BLANK', 'LINE_CONTINUATION', 'BLANK_LINE', 'UNDEFINED_TOKEN', 'INDENTATION_ERROR'):
-                return self.token
-        else:
-            if self.indent_stack:
-                self.token = Token(
-                    'DEDENT', self.indent_stack.pop(),
-                    self.line_num, 1
-                )
-                return self.token
-            else:
-                self.token = Token(Token.NONE, '', 0, 0)
+            if type_ not in (Token.BLANK, Token.LINE_CONTINUATION, Token.BLANK_LINE,
+                             Token.UNDEFINED_TOKEN, Token.INDENTATION_ERROR):
                 return self.token
