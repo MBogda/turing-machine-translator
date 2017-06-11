@@ -65,10 +65,9 @@ token_specification = [
     ('GREATER',                 r'>'),
     # ('ASSIGNMENT_OPERATOR',     r'='),
     ('ASSIGNMENT',              r'='),
-    ('BLANK_LINE',              r'^[ \t]*\n'),
     ('LINE_CONTINUATION',       r'\\\n'),
     ('NEWLINE',                 r'\n'),
-    ('INDENT',                  r'^[ \t]+'),
+    ('INDENT',                  r'^[ \t]+(?!\n| |\t)'),
     ('BLANK',                   r'[ \t]+'),
     ('UNDEFINED_TOKEN',         r'.'),
 
@@ -84,9 +83,8 @@ class Token:
      ASSIGNMENT_MINUS, ASSIGNMENT_MULTIPLY, ASSIGNMENT_DIVIDE, ASSIGNMENT_MODULO, PLUS, MINUS, MULTIPLY, DIVIDE, MODULO,
      HEAD_PLUS, HEAD_MINUS, HEAD_MULTIPLY, HEAD_DIVIDE, HEAD_MODULO, INPUT_BOOLEAN, INPUT_INTEGER, INPUT_SYMBOL,
      INPUT_TAPE, OUTPUT_BOOLEAN, OUTPUT_INTEGER, OUTPUT_SYMBOL, OUTPUT_TAPE, OUTPUT_ANY, SYMBOL_LITERAL, TAPE_LITERAL,
-     EQUAL, NOT_EQUAL, LESS_OR_EQUAL, GREATER_OR_EQUAL, LESS, GREATER, ASSIGNMENT, BLANK_LINE, LINE_CONTINUATION,
-     NEWLINE, INDENT, BLANK, UNDEFINED_TOKEN, END_OF_FILE, DEDENT, INDENTATION_ERROR) = [token[0] for token in
-                                                                                         token_specification]
+     EQUAL, NOT_EQUAL, LESS_OR_EQUAL, GREATER_OR_EQUAL, LESS, GREATER, ASSIGNMENT, LINE_CONTINUATION, NEWLINE, INDENT,
+     BLANK, UNDEFINED_TOKEN, END_OF_FILE, DEDENT, INDENTATION_ERROR) = [token[0] for token in token_specification]
 
     def __init__(self, type_, value, line, column):
         self.type = type_
@@ -136,7 +134,7 @@ class Lexer:
                 type_ = Token.BLANK
 
             # handle new dedents
-            if self.token and self.token.type == Token.NEWLINE and type_ not in (Token.INDENT, Token.BLANK_LINE):
+            if self.token.type == Token.NEWLINE and type_ not in (Token.INDENT, Token.BLANK, Token.NEWLINE):
                 if self.indent_stack:
                     self.dedent_count = len(self.indent_stack)
                     continue
@@ -163,7 +161,7 @@ class Lexer:
 
             self.token = Token(getattr(Token, type_), value, self.line_num, self.mo.start() - self.line_start + 1)
 
-            if type_ in (Token.NEWLINE, Token.LINE_CONTINUATION, Token.BLANK_LINE):
+            if type_ in (Token.NEWLINE, Token.LINE_CONTINUATION):
                 self.line_start = self.mo.end()
                 self.line_num += 1
             if type_ == Token.COMMENT:
@@ -180,7 +178,7 @@ class Lexer:
 
             self.mo = self.rg.match(self.text, self.mo.end())
 
-            if type_ not in (Token.BLANK, Token.COMMENT, Token.BLANK_LINE, Token.LINE_CONTINUATION,
+            if type_ not in (Token.BLANK, Token.COMMENT, Token.LINE_CONTINUATION,
                              Token.UNDEFINED_TOKEN, Token.INDENTATION_ERROR):
                 # handling newlines at the beginning of the file or after not-returned tokens
                 if type_ == Token.NEWLINE and self.newline_was_returned:
