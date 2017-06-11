@@ -4,8 +4,7 @@ import re
 from error import generate_error
 
 token_specification = [
-    # ('COMMENT',                 r'/\*(?:.|\n)*\*/|//.*$'),
-    ('COMMENT',                 r'/#(?:.|\n)*#/|#.*$'),
+    ('COMMENT',                 r'/#(?:.|\n)*?#/|#.*$'),
     # ('KEYWORD',                 r'|'.join(keyword for keyword in keywords)),
     ('TRUE',                    r'true'),
     ('FALSE',                   r'false'),
@@ -87,7 +86,7 @@ class Token:
      INPUT_TAPE, OUTPUT_BOOLEAN, OUTPUT_INTEGER, OUTPUT_SYMBOL, OUTPUT_TAPE, OUTPUT_ANY, SYMBOL_LITERAL, TAPE_LITERAL,
      EQUAL, NOT_EQUAL, LESS_OR_EQUAL, GREATER_OR_EQUAL, LESS, GREATER, ASSIGNMENT, BLANK_LINE, LINE_CONTINUATION,
      NEWLINE, INDENT, BLANK, UNDEFINED_TOKEN, END_OF_FILE, DEDENT, INDENTATION_ERROR) = [token[0] for token in
-                                                                                token_specification]
+                                                                                         token_specification]
 
     def __init__(self, type_, value, line, column):
         self.type = type_
@@ -116,9 +115,11 @@ class Lexer:
         self.line_start = 0
         self.indent_stack = []
         self.dedent_count = 0
+        self.newline_was_returned = True
 
     def next_token(self):
         while True:
+            # handle dedents on stack
             if self.dedent_count:
                 self.dedent_count -= 1
                 self.token = Token(
@@ -126,14 +127,20 @@ class Lexer:
                     self.line_num, self.mo.start() - self.line_start + 1
                 )
                 return self.token
+
             type_ = self.mo.lastgroup
             value = self.mo.group(type_)
+
+            # handle blank after line continuation
             if self.token.type == Token.LINE_CONTINUATION and type_ == Token.INDENT:
                 type_ = Token.BLANK
+
+            # handle new dedents
             if self.token and self.token.type == Token.NEWLINE and type_ not in (Token.INDENT, Token.BLANK_LINE):
                 if self.indent_stack:
                     self.dedent_count = len(self.indent_stack)
                     continue
+            # handle new indents and dedents
             if type_ == Token.INDENT:
                 if not self.indent_stack:
                     self.indent_stack.append(value)
@@ -153,17 +160,33 @@ class Lexer:
                             continue
                         else:
                             type_ = Token.INDENTATION_ERROR
+
             self.token = Token(getattr(Token, type_), value, self.line_num, self.mo.start() - self.line_start + 1)
+
             if type_ in (Token.NEWLINE, Token.LINE_CONTINUATION, Token.BLANK_LINE):
                 self.line_start = self.mo.end()
                 self.line_num += 1
+            if type_ == Token.COMMENT:
+                self.line_start = self.mo.start() + value.rfind('\n') + 1
+                self.line_num += value.count('\n')
+
             if type_ == Token.UNDEFINED_TOKEN:
                 generate_error(
                     'Lexer', "Undefined token {}".format(repr(self.token.value)),
                     self.token.line, self.token.column)
+
             if type_ == Token.INDENTATION_ERROR:
                 generate_error('Lexer', 'Indentation error', self.token.line, self.token.column)
+
             self.mo = self.rg.match(self.text, self.mo.end())
-            if type_ not in (Token.BLANK, Token.LINE_CONTINUATION, Token.BLANK_LINE,
-                             Token.UNDEFINED_TOKEN, Token.INDENTATION_ERROR, Token.COMMENT):
+
+            if type_ not in (Token.BLANK, Token.COMMENT, Token.BLANK_LINE, Token.LINE_CONTINUATION,
+                             Token.UNDEFINED_TOKEN, Token.INDENTATION_ERROR):
+                # handling newlines at the beginning of the file or after not-returned tokens
+                if type_ == Token.NEWLINE and self.newline_was_returned:
+                    continue
+                elif type_ == Token.NEWLINE:
+                    self.newline_was_returned = True
+                else:
+                    self.newline_was_returned = False
                 return self.token

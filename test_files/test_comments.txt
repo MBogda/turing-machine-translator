@@ -1,0 +1,26 @@
+/# this is
+# block
+# comment #/
+
+/# hello!! ######/
+/###### kuku! #/
+/### hello, kuku! #####/
+
+# this is line comment
+##### ololo!
+
+# and this is
+# /# block
+# comment #/
+# commented by line comments
+
+/# and this is
+# line comment
+commented by block comment #/
+
+/# this is nested
+/# block comment
+(parse like a signle block comment) #/ kuku1 #/
+
+kuku = 'comment example: /# hru! #/'
+kuku2 = "another comment example: # vasya"
