@@ -56,11 +56,11 @@ m[1 4 5] = 10
 >" tape		# for example "1|0|0|1" (equals "^1|0|0|1")
 result = mod_3(tape)	# return "1|0|0|1|^ "
 if result[0] == '0':
-	< 'Number is devided by 3'
+	<< 'Number is devided by 3'
 else:
-	< 'Number is not devided by 3'
+	<< 'Number is not devided by 3'
 
-< 'Do you want to check number for devision by 5?'
+<< 'Do you want to check number for devision by 5?'
 if >b:
 	clean_up = {q0 ' '}
 	clean_up:
@@ -98,16 +98,16 @@ if >b:
 	result = mod_3_and_5(tape)
 	
 	if result[-1] == '0':
-		< 'Number is devided by 3'
+		<< 'Number is devided by 3'
 	else:
-		< 'Number is not devided by 3'
+		<< 'Number is not devided by 3'
 	
 	if result[0] == '0':
-		< 'Number is devided by 5'
+		<< 'Number is devided by 5'
 	else:
-		< 'Number is not devided by 5'
+		<< 'Number is not devided by 5'
 		
-	< mod_3_and_5
+	<< mod_3_and_5
 	/# output:
 	q000 q100 q20 end000 end100 end00 q010 q110 end10 q01 q11 q21 q31 q41 end01 end11 end1
 	old output:
