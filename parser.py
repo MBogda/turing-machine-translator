@@ -32,6 +32,14 @@ class Parser:
             self.instruction()
 
     def instruction(self):
+        valid_tokens = (Token.IF, Token.WHILE, Token.OUTPUT_BOOLEAN, Token.OUTPUT_INTEGER, Token.OUTPUT_SYMBOL,
+                        Token.OUTPUT_TAPE, Token.OUTPUT_ANY, Token.INPUT_BOOLEAN, Token.INPUT_INTEGER,
+                        Token.INPUT_SYMBOL, Token.INPUT_TAPE, Token.IDENTIFIER)
+        if self.token.type not in valid_tokens:
+            self.error_expected(valid_tokens)
+            while self.token and self.token.type not in valid_tokens:
+                self.token = self.lexer.next_token()
+
         if self.token.type == Token.IF:
             self.if_statement()
         elif self.token.type == Token.WHILE:
@@ -39,12 +47,10 @@ class Parser:
         elif self.token.type in (Token.OUTPUT_BOOLEAN, Token.OUTPUT_INTEGER, Token.OUTPUT_SYMBOL,
                                  Token.OUTPUT_TAPE, Token.OUTPUT_ANY):
             self.output_statement()
+        elif self.token.type in (Token.INPUT_BOOLEAN, Token.INPUT_INTEGER, Token.INPUT_SYMBOL, Token.INPUT_TAPE):
+            self.input_statement()
         elif self.token.type == Token.IDENTIFIER:
             self.assignment()
-        else:
-            self.error_expected((Token.IF, Token.WHILE, Token.OUTPUT_BOOLEAN, Token.OUTPUT_INTEGER, Token.OUTPUT_SYMBOL,
-                                 Token.OUTPUT_TAPE, Token.OUTPUT_ANY, Token.IDENTIFIER))
-            self.token = self.lexer.next_token()
 
     # todo? add one-line if, while
     def if_statement(self):
@@ -85,12 +91,13 @@ class Parser:
         self.expression()
         self.accept(Token.NEWLINE)
 
+    def input_statement(self):
+        self.accept((Token.INPUT_BOOLEAN, Token.INPUT_INTEGER, Token.INPUT_SYMBOL, Token.INPUT_TAPE))
+        self.assignment_left()
+        self.accept(Token.NEWLINE)
+
     def assignment(self):
-        self.accept(Token.IDENTIFIER)
-        if self.token.type == Token.LEFT_SQUARE_BRACKET:
-            self.accept(Token.LEFT_SQUARE_BRACKET)
-            self.expression()
-            self.accept(Token.RIGHT_SQUARE_BRACKET)
+        self.assignment_left()
         self.accept((Token.ASSIGNMENT, Token.ASSIGNMENT_PLUS, Token.ASSIGNMENT_MINUS, Token.ASSIGNMENT_MULTIPLY,
                      Token.ASSIGNMENT_DIVIDE, Token.ASSIGNMENT_MODULO))
         self.expression()
@@ -98,6 +105,13 @@ class Parser:
             self.turing_machine_change_commands()
         else:
             self.accept(Token.NEWLINE)
+
+    def assignment_left(self):
+        self.accept(Token.IDENTIFIER)
+        if self.token.type == Token.LEFT_SQUARE_BRACKET:
+            self.accept(Token.LEFT_SQUARE_BRACKET)
+            self.expression()
+            self.accept(Token.RIGHT_SQUARE_BRACKET)
 
     def expression(self):
         self.subexpr1()
@@ -141,6 +155,14 @@ class Parser:
             self.term()
 
     def term(self):
+        valid_tokens = (Token.MINUS, Token.IDENTIFIER, Token.TRUE, Token.INTEGER_LITERAL, Token.SYMBOL_LITERAL,
+                        Token.TAPE_LITERAL, Token.LEFT_BRACE, Token.INPUT_BOOLEAN, Token.INPUT_INTEGER,
+                        Token.INPUT_SYMBOL, Token.INPUT_TAPE, Token.LEFT_BRACKET)
+        if self.token.type not in valid_tokens:
+            self.error_expected(valid_tokens)
+            while self.token and self.token.type not in valid_tokens:
+                self.token = self.lexer.next_token()
+
         while self.token.type == Token.MINUS:
             self.accept(Token.MINUS)
 
@@ -166,12 +188,8 @@ class Parser:
             self.accept(Token.LEFT_BRACKET)
             self.expression()
             self.accept(Token.RIGHT_BRACKET)
-        else:
-            self.error_expected((Token.MINUS, Token.IDENTIFIER, Token.TRUE, Token.INTEGER_LITERAL, Token.SYMBOL_LITERAL,
-                                 Token.TAPE_LITERAL, Token.LEFT_BRACE, Token.INPUT_BOOLEAN, Token.INPUT_INTEGER,
-                                 Token.INPUT_SYMBOL, Token.INPUT_TAPE, Token.LEFT_BRACKET))
-            self.token = self.lexer.next_token()
-            return
+
+        # after handling term:
         if self.token.type == Token.LEFT_SQUARE_BRACKET:
             self.accept(Token.LEFT_SQUARE_BRACKET)
             if self.token.type != Token.RIGHT_SQUARE_BRACKET:
