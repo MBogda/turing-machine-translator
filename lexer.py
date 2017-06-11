@@ -4,7 +4,8 @@ import re
 from error import generate_error
 
 token_specification = [
-    ('COMMENT',                 r'/\*(?:.|\n)*\*/|//.*$'),
+    # ('COMMENT',                 r'/\*(?:.|\n)*\*/|//.*$'),
+    ('COMMENT',                 r'/#(?:.|\n)*#/|#.*$'),
     # ('KEYWORD',                 r'|'.join(keyword for keyword in keywords)),
     ('TRUE',                    r'true'),
     ('FALSE',                   r'false'),
@@ -24,6 +25,7 @@ token_specification = [
     ('LEFT_SQUARE_BRACKET',     r'\['),
     ('RIGHT_SQUARE_BRACKET',    r'\]'),
     ('COLON',                   r':'),
+    ('COMMA',                   r','),
     # ('MODIFY_OPERATOR',         r'\+=|-=|\*=|/=|%='),
     ('ASSIGNMENT_PLUS',         r'\+='),
     ('ASSIGNMENT_MINUS',        r'-='),
@@ -79,12 +81,13 @@ token_specification = [
 
 class Token:
     (COMMENT, TRUE, FALSE, AND, OR, NOT, IF, ELIF, ELSE, WHILE, IDENTIFIER, INTEGER_LITERAL, LEFT_BRACE, RIGHT_BRACE,
-     LEFT_BRACKET, RIGHT_BRACKET, LEFT_SQUARE_BRACKET, RIGHT_SQUARE_BRACKET, COLON, ASSIGNMENT_PLUS, ASSIGNMENT_MINUS,
-     ASSIGNMENT_MULTIPLY, ASSIGNMENT_DIVIDE, ASSIGNMENT_MODULO, PLUS, MINUS, MULTIPLY, DIVIDE, MODULO, HEAD_PLUS,
-     HEAD_MINUS, HEAD_MULTIPLY, HEAD_DIVIDE, HEAD_MODULO, INPUT_BOOLEAN, INPUT_INTEGER, INPUT_SYMBOL, INPUT_TAPE,
-     OUTPUT_BOOLEAN, OUTPUT_INTEGER, OUTPUT_SYMBOL, OUTPUT_TAPE, OUTPUT_ANY, SYMBOL_LITERAL, TAPE_LITERAL, EQUAL,
-     NOT_EQUAL, LESS_OR_EQUAL, GREATER_OR_EQUAL, LESS, GREATER, ASSIGNMENT, BLANK_LINE, LINE_CONTINUATION, NEWLINE,
-     INDENT, BLANK, UNDEFINED_TOKEN, END_OF_FILE, DEDENT, INDENTATION_ERROR) = [token[0] for token in token_specification]
+     LEFT_BRACKET, RIGHT_BRACKET, LEFT_SQUARE_BRACKET, RIGHT_SQUARE_BRACKET, COLON, COMMA, ASSIGNMENT_PLUS,
+     ASSIGNMENT_MINUS, ASSIGNMENT_MULTIPLY, ASSIGNMENT_DIVIDE, ASSIGNMENT_MODULO, PLUS, MINUS, MULTIPLY, DIVIDE, MODULO,
+     HEAD_PLUS, HEAD_MINUS, HEAD_MULTIPLY, HEAD_DIVIDE, HEAD_MODULO, INPUT_BOOLEAN, INPUT_INTEGER, INPUT_SYMBOL,
+     INPUT_TAPE, OUTPUT_BOOLEAN, OUTPUT_INTEGER, OUTPUT_SYMBOL, OUTPUT_TAPE, OUTPUT_ANY, SYMBOL_LITERAL, TAPE_LITERAL,
+     EQUAL, NOT_EQUAL, LESS_OR_EQUAL, GREATER_OR_EQUAL, LESS, GREATER, ASSIGNMENT, BLANK_LINE, LINE_CONTINUATION,
+     NEWLINE, INDENT, BLANK, UNDEFINED_TOKEN, END_OF_FILE, DEDENT, INDENTATION_ERROR) = [token[0] for token in
+                                                                                token_specification]
 
     def __init__(self, type_, value, line, column):
         self.type = type_
