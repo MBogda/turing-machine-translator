@@ -1,0 +1,124 @@
+/#
+types:
+bool : true | false
+int : 123 | -554
+symbol : 'sdvsv' (not empty)
+tape : "symbol1|symbol2|^symbol3"
+turing machine : {identifier symbol}
+
+input:
+>b bool
+>i int
+>' symbol
+>" tape
+
+output:
+<b bool
+<i int
+<' symbol
+<" tape
+< anything
+
+special symbols in symbol or tape literals:
+\' is ' in symbol literal (but you can use ' in tape literal)
+\" is " in tape literal (but you can use " in symbol literal)
+\| is | in tape literal (but you can use | in symbol literal)
+\^ is ^ in tape literal (but you can use ^ in symbol literal)
+\\ is \ in symbol or tape literal
+\n is new line in symbol or tape literal
+\t is tab in symbol or tape literal
+#/
+
+mod_3 = {q0 ' '}:
+	q0 ' ' = end0 - >
+	q0 '0' = - - > /#
+	
+	dvmj
+	vsdliu
+	
+	svba
+	fd
+	hjav
+	#/
+	q0 '1' = q1 - >
+	q1 ' ' = end1 - >
+	q1 '0' = q2 - >
+	q1 '1' = q0 - >
+	q2 ' ' = end1 - >
+	q2 '0' = q1 - >
+	q2 '1' = q2 - >
+	end0 ' ' = end '0' -
+	end1 ' ' = end '1' -
+
+# for example:
+mod_3[q2 '1'] = q2 - >
+m[1 4 5] = 10
+>" tape		# for example "1|0|0|1" (equals "^1|0|0|1")
+result = mod_3(tape)	# return "1|0|0|1|^ "
+if result[0] == '0':
+	< 'Number is devided by 3'
+else:
+	< 'Number is not devided by 3'
+
+< 'Do you want to check number for devision by 5?'
+if >b:
+	clean_up = {q0 ' '}
+	clean_up:
+		q0 '0' = - - <
+		q0 '1' = - - <
+		q0 ' ' = q1 - <
+		q1 '0' = - - <
+		q1 '1' = - - <
+		q1 ' ' = end - >
+	
+	mod_5 = {q0 ' '}:
+		q0 ' ' = end0 - >
+		q0 '0' = - - >
+		q0 '1' = q1 - >
+		q1 ' ' = end1 - >
+		q1 '0' = q2 - >
+		q1 '1' = q3 - >
+		q2 ' ' = end1 - >
+		q2 '0' = q4 - >
+		q2 '1' = q0 - >
+		q3 ' ' = end1 - >
+		q3 '0' = q1 - >
+		q3 '1' = q2 - >
+		q4 ' ' = end1 - >
+		q4 '0' = q3 - >
+		q4 '1' = q4 - >
+		end0 '0' = - - >
+		end0 '1' = - - >
+		end0 ' ' = end '0' -
+		end1 '0' = - - >
+		end1 '1' = - - >
+		end1 ' ' = end '1' -
+		
+	mod_3_and_5 = mod_3 + clean_up + mod_5
+	result = mod_3_and_5(tape)
+	
+	if result[-1] == '0':
+		< 'Number is devided by 3'
+	else:
+		< 'Number is not devided by 3'
+	
+	if result[0] == '0':
+		< 'Number is devided by 5'
+	else:
+		< 'Number is not devided by 5'
+		
+	< mod_3_and_5
+	/# output:
+	q000 q100 q20 end000 end100 end00 q010 q110 end10 q01 q11 q21 q31 q41 end01 end11 end1
+	old output:
+	q0.. q1.. q2.. end0.. end1.. end.. q0!. q1!. end!. q0! q1! q2! q3! q4! end0! end1! end!
+	#/
+
+# more examples
+# индексация ленты начинается от позиции маркера (она всегда равна 0) и увеличивается вправо, уменьшается влево
+# оператор + оставляет маркер в левой ленте, а оператор * оставляет маркер в правой ленте
+tape = "^1|0|1"
+tape2 = ("1|0" + tape) ^+ 2
+tape3 = "1|0" * tape
+tape2 == tape3 # true
+

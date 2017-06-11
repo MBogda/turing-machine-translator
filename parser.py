@@ -13,15 +13,19 @@ class Parser:
         generate_error('Parser', 'expected {}, got {}'.format(
             ' or '.join(str(token) for token in expected), self.token.type
         ), self.token.line, self.token.column)
-        self.token = Token(Token.END_OF_FILE, )
+        # self.token = Token(Token.END_OF_FILE, '', 0, 0)
 
     def accept(self, token_types):
-        if not isinstance(token_types, (tuple, tuple)):
-            token_types = (token_types,)
-        if self.token.type in token_types:
+        if self.token:
+            if not isinstance(token_types, (tuple, tuple)):
+                token_types = (token_types,)
+            if self.token.type not in token_types:
+                self.error_expected(token_types)
+                while self.token and self.token.type not in token_types:
+                    self.token = self.lexer.next_token()
             self.token = self.lexer.next_token()
         else:
-            self.error_expected(token_types)
+            exit()
 
     def program(self):
         while self.token:
@@ -40,6 +44,7 @@ class Parser:
         else:
             self.error_expected((Token.IF, Token.WHILE, Token.OUTPUT_BOOLEAN, Token.OUTPUT_INTEGER, Token.OUTPUT_SYMBOL,
                                  Token.OUTPUT_TAPE, Token.OUTPUT_ANY, Token.IDENTIFIER))
+            self.token = self.lexer.next_token()
 
     # todo? add one-line if, while
     def if_statement(self):
@@ -165,6 +170,7 @@ class Parser:
             self.error_expected((Token.MINUS, Token.IDENTIFIER, Token.TRUE, Token.INTEGER_LITERAL, Token.SYMBOL_LITERAL,
                                  Token.TAPE_LITERAL, Token.LEFT_BRACE, Token.INPUT_BOOLEAN, Token.INPUT_INTEGER,
                                  Token.INPUT_SYMBOL, Token.INPUT_TAPE, Token.LEFT_BRACKET))
+            self.token = self.lexer.next_token()
             return
         if self.token.type == Token.LEFT_SQUARE_BRACKET:
             self.accept(Token.LEFT_SQUARE_BRACKET)
