@@ -164,7 +164,7 @@ class Lexer:
             if type_ in (Token.NEWLINE, Token.LINE_CONTINUATION):
                 self.line_start = self.mo.end()
                 self.line_num += 1
-            if type_ == Token.COMMENT:
+            if type_ == Token.COMMENT and '\n' in value:
                 self.line_start = self.mo.start() + value.rfind('\n') + 1
                 self.line_num += value.count('\n')
 
