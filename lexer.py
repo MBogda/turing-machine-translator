@@ -25,6 +25,7 @@ token_specification = [
     ('RIGHT_SQUARE_BRACKET',    r'\]'),
     ('COLON',                   r':'),
     ('SEMICOLON',               r';'),
+    ('HEAD',                    r'\^'),
     # ('MODIFY_OPERATOR',         r'\+=|-=|\*=|/=|%='),
     ('ASSIGNMENT_PLUS',         r'\+='),
     ('ASSIGNMENT_MINUS',        r'-='),
@@ -37,12 +38,6 @@ token_specification = [
     ('MULTIPLY',                r'\*'),
     ('DIVIDE',                  r'/'),
     ('MODULO',                  r'%'),
-    # ('CARET_OPERATOR',          r'\^\+|\^-|\^\*|\^/|\^%'),
-    ('HEAD_PLUS',               r'\^\+'),
-    ('HEAD_MINUS',              r'\^-'),
-    ('HEAD_MULTIPLY',           r'\^\*'),
-    ('HEAD_DIVIDE',             r'\^/'),
-    ('HEAD_MODULO',             r'\^%'),
     # ('INPUT_OPERATOR',          r'>b|>i|>\'|>"'),
     ('INPUT_BOOLEAN',           r'>b'),
     ('INPUT_INTEGER',           r'>i'),
@@ -79,12 +74,12 @@ token_specification = [
 
 class Token:
     (COMMENT, TRUE, FALSE, AND, OR, NOT, IF, ELIF, ELSE, WHILE, IDENTIFIER, INTEGER_LITERAL, LEFT_BRACE, RIGHT_BRACE,
-     LEFT_BRACKET, RIGHT_BRACKET, LEFT_SQUARE_BRACKET, RIGHT_SQUARE_BRACKET, COLON, SEMICOLON, ASSIGNMENT_PLUS,
+     LEFT_BRACKET, RIGHT_BRACKET, LEFT_SQUARE_BRACKET, RIGHT_SQUARE_BRACKET, COLON, SEMICOLON, HEAD, ASSIGNMENT_PLUS,
      ASSIGNMENT_MINUS, ASSIGNMENT_MULTIPLY, ASSIGNMENT_DIVIDE, ASSIGNMENT_MODULO, PLUS, MINUS, MULTIPLY, DIVIDE, MODULO,
-     HEAD_PLUS, HEAD_MINUS, HEAD_MULTIPLY, HEAD_DIVIDE, HEAD_MODULO, INPUT_BOOLEAN, INPUT_INTEGER, INPUT_SYMBOL,
-     INPUT_TAPE, OUTPUT_BOOLEAN, OUTPUT_INTEGER, OUTPUT_SYMBOL, OUTPUT_TAPE, OUTPUT_ANY, SYMBOL_LITERAL, TAPE_LITERAL,
-     EQUAL, NOT_EQUAL, LESS_OR_EQUAL, GREATER_OR_EQUAL, LESS, GREATER, ASSIGNMENT, LINE_CONTINUATION, NEWLINE, INDENT,
-     BLANK, UNDEFINED_TOKEN, END_OF_FILE, DEDENT, INDENTATION_ERROR) = [token[0] for token in token_specification]
+     INPUT_BOOLEAN, INPUT_INTEGER, INPUT_SYMBOL, INPUT_TAPE, OUTPUT_BOOLEAN, OUTPUT_INTEGER, OUTPUT_SYMBOL, OUTPUT_TAPE,
+     OUTPUT_ANY, SYMBOL_LITERAL, TAPE_LITERAL, EQUAL, NOT_EQUAL, LESS_OR_EQUAL, GREATER_OR_EQUAL, LESS, GREATER,
+     ASSIGNMENT, LINE_CONTINUATION, NEWLINE, INDENT, BLANK, UNDEFINED_TOKEN, END_OF_FILE, DEDENT, INDENTATION_ERROR
+     ) = [token[0] for token in token_specification]
 
     def __init__(self, type_, value, line, column):
         self.type = type_

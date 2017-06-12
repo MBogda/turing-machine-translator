@@ -93,10 +93,15 @@ class Parser:
 
     def assignment(self):
         self.accept(Token.IDENTIFIER)
+        # handle identifier[expression]
         if self.token.type == Token.LEFT_SQUARE_BRACKET:
             self.accept(Token.LEFT_SQUARE_BRACKET)
             self.expression()
             self.accept(Token.RIGHT_SQUARE_BRACKET)
+        # handle identifier^
+        elif self.token.type == Token.HEAD:
+            self.accept(Token.HEAD)
+        # handle identifier: \n <turing machine instruction sequence>
         elif self.token.type == Token.COLON:
             self.turing_machine_instruction_sequence()
             return
@@ -114,7 +119,6 @@ class Parser:
             (Token.EQUAL, Token.NOT_EQUAL, Token.LESS, Token.GREATER, Token.LESS_OR_EQUAL, Token.GREATER_OR_EQUAL),
             (Token.PLUS, Token.MINUS),
             (Token.MULTIPLY, Token.DIVIDE, Token.MODULO),
-            (Token.HEAD_PLUS, Token.HEAD_MINUS, Token.HEAD_MULTIPLY, Token.HEAD_DIVIDE, Token.HEAD_MODULO),
             (Token.MINUS,),
             (),
         ]
@@ -173,15 +177,20 @@ class Parser:
             self.accept(Token.RIGHT_BRACKET)
 
         # after handling term:
+        # handle term[] and term[expression]
         if self.token.type == Token.LEFT_SQUARE_BRACKET:
             self.accept(Token.LEFT_SQUARE_BRACKET)
             if self.token.type != Token.RIGHT_SQUARE_BRACKET:
                 self.expression()
             self.accept(Token.RIGHT_SQUARE_BRACKET)
+        # handle term(expression)
         elif self.token.type == Token.LEFT_BRACKET:
             self.accept(Token.LEFT_BRACKET)
             self.expression()
             self.accept(Token.RIGHT_BRACKET)
+        # handel term^
+        elif self.token.type == Token.HEAD:
+            self.accept(Token.HEAD)
 
     def turing_machine_literal(self):
         self.accept(Token.LEFT_BRACE)
