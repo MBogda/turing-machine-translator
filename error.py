@@ -11,7 +11,5 @@ def generate_error(error_type, error_message, line, column):
         error_type=error_type, error_message=error_message, line=line, column=column))
     raw_line = program_text[line - 1]
     print(' ' + raw_line.replace('\t', ' '))
-    # tabs = raw_line[:column].count('\t')
-    # caret_line = ' ' * (column - 1) + ' ' * 3 * tabs + '^'
-    caret_line = ' ' * (column) + '^'
+    caret_line = ' ' * column + '^'
     print(caret_line)
