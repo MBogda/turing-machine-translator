@@ -106,45 +106,36 @@ class Parser:
         self.expression()
         self.accept(Token.NEWLINE)
 
-    def expression(self):
-        self.subexpr1()
-        while self.token.type == Token.OR:
-            self.accept(Token.OR)
-            self.subexpr1()
-
-    def subexpr1(self):
-        self.subexpr2()
-        while self.token.type == Token.AND:
-            self.accept(Token.AND)
-            self.subexpr2()
-
-    def subexpr2(self):
-        while self.token.type == Token.NOT:
-            self.accept(Token.NOT)
-
-        self.subexpr3()
-        if self.token.type in (Token.EQUAL, Token.NOT_EQUAL, Token.LESS, Token.GREATER,
-                               Token.LESS_OR_EQUAL, Token.GREATER_OR_EQUAL):
-            self.accept(self.token.type)
-            self.subexpr3()
-
-    def subexpr3(self):
-        self.subexpr4()
-        while self.token.type in (Token.PLUS, Token.MINUS):
-            self.accept(self.token.type)
-            self.subexpr4()
-
-    def subexpr4(self):
-        self.subexpr5()
-        while self.token.type in (Token.MULTIPLY, Token.DIVIDE, Token.MODULO):
-            self.accept(self.token.type)
-            self.subexpr5()
-
-    def subexpr5(self):
-        self.term()
-        while self.token.type in (Token.HEAD_PLUS, Token.HEAD_MINUS, Token.HEAD_MULTIPLY,
-                                  Token.HEAD_DIVIDE, Token.HEAD_MODULO):
-            self.accept(self.token.type)
+    def expression(self, level=0):
+        operators = [
+            (Token.OR,),
+            (Token.AND,),
+            (Token.NOT,),
+            (Token.EQUAL, Token.NOT_EQUAL, Token.LESS, Token.GREATER, Token.LESS_OR_EQUAL, Token.GREATER_OR_EQUAL),
+            (Token.PLUS, Token.MINUS),
+            (Token.MULTIPLY, Token.DIVIDE, Token.MODULO),
+            (Token.HEAD_PLUS, Token.HEAD_MINUS, Token.HEAD_MULTIPLY, Token.HEAD_DIVIDE, Token.HEAD_MODULO),
+            (Token.MINUS,),
+            (),
+        ]
+        if level < len(operators):
+            current_operators = operators[level]
+            # NOT or unary MINUS
+            if level == 2 or level == 7:
+                while self.token.type in current_operators:
+                    self.accept(current_operators)
+                self.expression(level + 1)
+            elif level == 3:
+                self.expression(level + 1)
+                if self.token.type in current_operators:
+                    self.accept(current_operators)
+                    self.expression(level + 1)
+            else:
+                self.expression(level + 1)
+                while self.token.type in current_operators:
+                    self.accept(current_operators)
+                    self.expression(level + 1)
+        else:
             self.term()
 
     def term(self):
@@ -157,9 +148,6 @@ class Parser:
                 self.token = self.lexer.next_token()
                 if not self.token:
                     exit()
-
-        while self.token.type == Token.MINUS:
-            self.accept(Token.MINUS)
 
         # identifiers
         if self.token.type == Token.IDENTIFIER:
