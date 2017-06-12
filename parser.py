@@ -7,19 +7,21 @@ class Parser:
         self.lexer = lexer
         self.token = lexer.next_token()
 
-    def error_expected(self, expected):
-        if not isinstance(expected, (tuple, list)):
-            expected = (expected,)
+    def parse(self):
+        self.program()
+
+    def error_expected_token_type(self, token_types):
+        if not isinstance(token_types, (tuple, list)):
+            token_types = (token_types,)
         generate_error('Parser', 'expected {}, got {}'.format(
-            ' or '.join(str(token) for token in expected), self.token.type
+            ' or '.join(str(token) for token in token_types), self.token.type
         ), self.token.line, self.token.column)
-        # self.token = Token(Token.END_OF_FILE, '', 0, 0)
 
     def accept(self, token_types):
         if not isinstance(token_types, (tuple, tuple)):
             token_types = (token_types,)
         if self.token.type not in token_types:
-            self.error_expected(token_types)
+            self.error_expected_token_type(token_types)
             while self.token.type not in token_types:
                 self.token = self.lexer.next_token()
                 if not self.token:
@@ -34,7 +36,7 @@ class Parser:
         valid_tokens = (Token.IF, Token.WHILE, Token.OUTPUT_BOOLEAN, Token.OUTPUT_INTEGER, Token.OUTPUT_SYMBOL,
                         Token.OUTPUT_TAPE, Token.OUTPUT_ANY, Token.IDENTIFIER)
         if self.token.type not in valid_tokens:
-            self.error_expected(valid_tokens)
+            self.error_expected_token_type(valid_tokens)
             while self.token.type not in valid_tokens:
                 self.token = self.lexer.next_token()
                 if not self.token:
@@ -96,16 +98,13 @@ class Parser:
             self.expression()
             self.accept(Token.RIGHT_SQUARE_BRACKET)
         elif self.token.type == Token.COLON:
-            self.turing_machine_change_commands()
+            self.turing_machine_instruction_sequence()
             return
 
         self.accept((Token.ASSIGNMENT, Token.ASSIGNMENT_PLUS, Token.ASSIGNMENT_MINUS, Token.ASSIGNMENT_MULTIPLY,
                      Token.ASSIGNMENT_DIVIDE, Token.ASSIGNMENT_MODULO))
         self.expression()
-        if self.token.type == Token.COLON:
-            self.turing_machine_change_commands()
-        else:
-            self.accept(Token.NEWLINE)
+        self.accept(Token.NEWLINE)
 
     def expression(self):
         self.subexpr1()
@@ -153,7 +152,7 @@ class Parser:
                         Token.TAPE_LITERAL, Token.LEFT_BRACE, Token.INPUT_BOOLEAN, Token.INPUT_INTEGER,
                         Token.INPUT_SYMBOL, Token.INPUT_TAPE, Token.LEFT_BRACKET)
         if self.token.type not in valid_tokens:
-            self.error_expected(valid_tokens)
+            self.error_expected_token_type(valid_tokens)
             while self.token.type not in valid_tokens:
                 self.token = self.lexer.next_token()
                 if not self.token:
@@ -202,27 +201,27 @@ class Parser:
         self.accept(Token.SYMBOL_LITERAL)
         if self.token.type == Token.COLON:
             self.accept(Token.COLON)
-            while self.token != Token.RIGHT_BRACE:
-                self.turing_machine_command()
-                self.accept(Token.COMMA)
+            while self.token.type != Token.RIGHT_BRACE:
+                self.turing_machine_instruction()
+                if self.token.type != Token.RIGHT_BRACE:
+                    self.accept(Token.SEMICOLON)
+            if self.token.type == Token.SEMICOLON:
+                self.accept(Token.SEMICOLON)
         self.accept(Token.RIGHT_BRACE)
 
-    def turing_machine_change_commands(self):
+    def turing_machine_instruction_sequence(self):
         self.accept(Token.COLON)
         self.accept(Token.NEWLINE)
         self.accept(Token.INDENT)
         while self.token.type != Token.DEDENT:
-            self.turing_machine_command()
+            self.turing_machine_instruction()
             self.accept(Token.NEWLINE)
         self.accept(Token.DEDENT)
 
-    def turing_machine_command(self):
+    def turing_machine_instruction(self):
         self.accept(Token.IDENTIFIER)
         self.accept(Token.SYMBOL_LITERAL)
         self.accept(Token.ASSIGNMENT)
         self.accept((Token.IDENTIFIER, Token.MINUS))
         self.accept((Token.SYMBOL_LITERAL, Token.MINUS))
         self.accept((Token.LESS, Token.GREATER, Token.MINUS))
-
-    def parse(self):
-        self.program()
