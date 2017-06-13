@@ -49,7 +49,7 @@ class OutputStatement:
         self.value = None
 
     def __str__(self):
-        return '\nOutputStatement:\n type={}\n value:'.format(
+        return '\nOutputStatement:\n type={}\n value:{}'.format(
             self.type,
             str(self.value).replace('\n', '\n  '),
         )
@@ -62,7 +62,7 @@ class AssignmentStatement:
         self.right = None
 
     def __str__(self):
-        return '\nAssignmentStatement:\n operator={}\n left:{} \n right:{}'.format(
+        return '\nAssignmentStatement:\n operator={}\n left:{}\n right:{}'.format(
             self.operator,
             str(self.left).replace('\n', '\n  '),
             str(self.right).replace('\n', '\n  '),
@@ -89,8 +89,8 @@ class TuringMachineInstruction:
         self.shift = None
 
     def __str__(self):
-        return '\nTuringMachineInstruction:\n left_state:\n left_symbol:' \
-               '\n right_state:\n right_symbol:\n shift={}'.format(
+        return '\nTuringMachineInstruction:\n left_state:{}\n left_symbol:{}' \
+               '\n right_state:{}\n right_symbol:{}\n shift={}'.format(
             str(self.left_state).replace('\n', '\n  '),
             str(self.left_symbol).replace('\n', '\n  '),
             str(self.right_state).replace('\n', '\n  '),
@@ -108,7 +108,7 @@ class Expression:
         self.right = None
 
     def __str__(self):
-        return '\nExpression:\n operator={}\n unary_operator={}\n type={}\n left:\n right:\n'.format(
+        return '\nExpression:\n operator={}\n unary_operator={}\n type={}\n left:{}\n right:{}'.format(
             self.operator,
             self.unary_operator,
             self.type,
@@ -135,9 +135,9 @@ class Literal:
         self.type = None
 
     def __str__(self):
-        return '\nLiteral:\n value={}\n type={}'.format(
-            repr(self.value),
+        return '\nLiteral:\n type={}\n value:{}'.format(
             self.type,
+            str(self.value).replace('\n', '\n  '),
         )
 
 
