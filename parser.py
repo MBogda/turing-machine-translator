@@ -135,6 +135,7 @@ class Parser:
         # handle identifier^
         elif self.token.type == Token.HEAD:
             left_left = left
+            left = ast.Expression()
             left.left = left_left
             left.unary_operator = self.accept(Token.HEAD).type
 
@@ -173,7 +174,10 @@ class Parser:
                     self.accept(unary_operator)
                     count += 1
                 expr = self.expression(level + 1)
-                if count % 2 == 0:
+                if count % 2 != 0:
+                    left = expr
+                    expr = ast.Expression()
+                    expr.left = left
                     expr.unary_operator = unary_operator
             else:
                 current_operators = operators[level]
@@ -252,9 +256,10 @@ class Parser:
             left = term
             term = ast.Expression()
             term.left = left
-            term.operator = self.token
+            term.unary_operator = self.token.type
             self.accept(Token.LEFT_SQUARE_BRACKET)
             if self.token.type != Token.RIGHT_SQUARE_BRACKET:
+                term.operator, term.unary_operator = term.unary_operator, None
                 term.right = self.expression()
             self.accept(Token.RIGHT_SQUARE_BRACKET)
 
@@ -263,7 +268,7 @@ class Parser:
             left = term
             term = ast.Expression()
             term.left = left
-            term.operator = self.token
+            term.operator = self.token.type
             self.accept(Token.LEFT_BRACKET)
             term.right = self.expression()
             self.accept(Token.RIGHT_BRACKET)
@@ -273,11 +278,12 @@ class Parser:
             left = term
             term = ast.Expression()
             term.left = left
-            term.unary_operator = self.token
+            term.unary_operator = self.token.type
             self.accept(Token.HEAD)
 
         return term
 
+    # todo: handle in ast TM start state and empty symbol
     def turing_machine_literal(self):
         literal = ast.Literal()
         literal.type = ast.Type.TURING_MACHINE
