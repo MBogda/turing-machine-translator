@@ -1,5 +1,6 @@
 from error import generate_error
 from lexer import Token
+import abstract_syntax_tree as ast
 
 
 class Parser:
@@ -8,7 +9,7 @@ class Parser:
         self.token = lexer.next_token()
 
     def parse(self):
-        self.program()
+        return self.program()
 
     def error_expected_token_type(self, token_types):
         if not isinstance(token_types, (tuple, list)):
@@ -26,11 +27,15 @@ class Parser:
                 self.token = self.lexer.next_token()
                 if not self.token:
                     exit()
+        accepted_token = self.token
         self.token = self.lexer.next_token()
+        return accepted_token
 
     def program(self):
+        program = ast.InstructionSequence()
         while self.token:
-            self.instruction()
+            program.instructions.append(self.instruction())
+        return program
 
     def instruction(self):
         valid_tokens = (Token.IF, Token.WHILE, Token.OUTPUT_BOOLEAN, Token.OUTPUT_INTEGER, Token.OUTPUT_SYMBOL,
@@ -43,73 +48,110 @@ class Parser:
                     exit()
 
         if self.token.type == Token.IF:
-            self.if_statement()
+            return self.if_statement()
         elif self.token.type == Token.WHILE:
-            self.while_statement()
+            return self.while_statement()
         elif self.token.type in (Token.OUTPUT_BOOLEAN, Token.OUTPUT_INTEGER, Token.OUTPUT_SYMBOL,
                                  Token.OUTPUT_TAPE, Token.OUTPUT_ANY):
-            self.output_statement()
+            return self.output_statement()
         elif self.token.type == Token.IDENTIFIER:
-            self.assignment()
+            return self.assignment_statement()
 
     # todo? add one-line if, while
     def if_statement(self):
+        statement = ast.IfStatement()
         self.accept(Token.IF)
-        self.expression()
+        statement.condition = self.expression()
         self.accept(Token.COLON)
         self.accept(Token.NEWLINE)
-        self.block_of_instructions()
+        statement.if_body = self.block_of_instructions()
+        last_if = statement
         while self.token.type == Token.ELIF:
+            elif_statement = ast.IfStatement()
             self.accept(Token.ELIF)
-            self.expression()
+            # statement.elif_condition.append(self.expression())
+            elif_statement.condition = self.expression()
             self.accept(Token.COLON)
             self.accept(Token.NEWLINE)
-            self.block_of_instructions()
+            # statement.elif_body.append(self.block_of_instructions())
+            elif_statement.if_body = self.block_of_instructions()
+            last_if.else_body = elif_statement
+            last_if = elif_statement
         if self.token.type == Token.ELSE:
             self.accept(Token.ELSE)
             self.accept(Token.COLON)
             self.accept(Token.NEWLINE)
-            self.block_of_instructions()
+            last_if.else_body = self.block_of_instructions()
+        return statement
 
     def while_statement(self):
+        statement = ast.WhileStatement()
         self.accept(Token.WHILE)
-        self.expression()
+        statement.condition = self.expression()
         self.accept(Token.COLON)
         self.accept(Token.NEWLINE)
-        self.block_of_instructions()
+        statement.body = self.block_of_instructions()
 
     def block_of_instructions(self):
+        sequence = ast.InstructionSequence()
         self.accept(Token.INDENT)
-        self.instruction()
+        sequence.instructions.append(self.instruction())
         while self.token.type != Token.DEDENT:
-            self.instruction()
+            sequence.instructions.append(self.instruction())
         self.accept(Token.DEDENT)
+        return sequence
 
     def output_statement(self):
-        self.accept((Token.OUTPUT_BOOLEAN, Token.OUTPUT_INTEGER, Token.OUTPUT_SYMBOL,
-                     Token.OUTPUT_TAPE, Token.OUTPUT_ANY))
-        self.expression()
+        statement = ast.OutputStatement()
+        accepted = self.accept((Token.OUTPUT_BOOLEAN, Token.OUTPUT_INTEGER, Token.OUTPUT_SYMBOL,
+                                Token.OUTPUT_TAPE, Token.OUTPUT_ANY))
+        if accepted.type == Token.OUTPUT_BOOLEAN:
+            statement.type = ast.Type.BOOLEAN
+        if accepted.type == Token.OUTPUT_INTEGER:
+            statement.type = ast.Type.INTEGER
+        if accepted.type == Token.OUTPUT_SYMBOL:
+            statement.type = ast.Type.SYMBOL
+        if accepted.type == Token.OUTPUT_TAPE:
+            statement.type = ast.Type.TAPE
+        # OUTPUT_ANY is coded as None
+        statement.value = self.expression()
         self.accept(Token.NEWLINE)
+        return statement
 
-    def assignment(self):
-        self.accept(Token.IDENTIFIER)
+    def assignment_statement(self):
+        statement = ast.AssignmentStatement()
+        left = ast.Identifier()
+        left.name = self.accept(Token.IDENTIFIER).value
+
         # handle identifier[expression]
         if self.token.type == Token.LEFT_SQUARE_BRACKET:
-            self.accept(Token.LEFT_SQUARE_BRACKET)
-            self.expression()
+            left_left = left
+            left = ast.Expression()
+            left.left = left_left
+            left.operator = self.accept(Token.LEFT_SQUARE_BRACKET).type
+            left.right = self.expression()
             self.accept(Token.RIGHT_SQUARE_BRACKET)
+
         # handle identifier^
         elif self.token.type == Token.HEAD:
-            self.accept(Token.HEAD)
+            left_left = left
+            left.left = left_left
+            left.unary_operator = self.accept(Token.HEAD).type
+
         # handle identifier: \n <turing machine instruction sequence>
         elif self.token.type == Token.COLON:
-            self.turing_machine_instruction_sequence()
-            return
+            statement.left = left
+            statement.operator = self.token.type
+            statement.right = self.turing_machine_instruction_sequence()
+            return statement
 
-        self.accept((Token.ASSIGNMENT, Token.ASSIGNMENT_PLUS, Token.ASSIGNMENT_MINUS, Token.ASSIGNMENT_MULTIPLY,
-                     Token.ASSIGNMENT_DIVIDE, Token.ASSIGNMENT_MODULO))
-        self.expression()
+        statement.left = left
+        statement.operator = self.accept((Token.ASSIGNMENT, Token.ASSIGNMENT_PLUS, Token.ASSIGNMENT_MINUS,
+                                          Token.ASSIGNMENT_MULTIPLY, Token.ASSIGNMENT_DIVIDE, Token.ASSIGNMENT_MODULO)
+                                         ).type
+        statement.right = self.expression()
         self.accept(Token.NEWLINE)
+        return statement
 
     def expression(self, level=0):
         operators = [
@@ -123,24 +165,31 @@ class Parser:
             (),
         ]
         if level < len(operators):
-            current_operators = operators[level]
             # NOT or unary MINUS
-            if level == 2 or level == 7:
-                while self.token.type in current_operators:
-                    self.accept(current_operators)
-                self.expression(level + 1)
-            elif level == 3:
-                self.expression(level + 1)
-                if self.token.type in current_operators:
-                    self.accept(current_operators)
-                    self.expression(level + 1)
+            if level == 2 or level == 6:
+                unary_operator = operators[level][0]
+                count = 0
+                while self.token.type == unary_operator:
+                    self.accept(unary_operator)
+                    count += 1
+                expr = self.expression(level + 1)
+                if count % 2 == 0:
+                    expr.unary_operator = unary_operator
             else:
-                self.expression(level + 1)
+                current_operators = operators[level]
+                expr = self.expression(level + 1)
                 while self.token.type in current_operators:
-                    self.accept(current_operators)
-                    self.expression(level + 1)
+                    left = expr
+                    expr = ast.Expression()
+                    expr.left = left
+                    expr.operator = self.accept(current_operators).type
+                    expr.right = self.expression(level + 1)
+                    # handle only one comparison operator, not sequence of ones
+                    if level == 3:
+                        break
+            return expr
         else:
-            self.term()
+            return self.term()
 
     def term(self):
         valid_tokens = (Token.MINUS, Token.IDENTIFIER, Token.TRUE, Token.INTEGER_LITERAL, Token.SYMBOL_LITERAL,
@@ -155,70 +204,140 @@ class Parser:
 
         # identifiers
         if self.token.type == Token.IDENTIFIER:
+            term = ast.Identifier()
+            term.name = self.token.value
             self.accept(Token.IDENTIFIER)
 
         # literals
         elif self.token.type in (Token.TRUE, Token.FALSE, Token.INTEGER_LITERAL,
                                  Token.SYMBOL_LITERAL, Token.TAPE_LITERAL):
+            term = ast.Literal()
+            term.value = self.token.value
+            if self.token.type in (Token.TRUE, Token.FALSE):
+                term.type = ast.Type.BOOLEAN
+            elif self.token.type == Token.INTEGER_LITERAL:
+                term.type = ast.Type.INTEGER
+            elif self.token.type == Token.SYMBOL_LITERAL:
+                term.type = ast.Type.SYMBOL
+            elif self.token.type == Token.TAPE_LITERAL:
+                term.type = ast.Type.TAPE
             self.accept(self.token.type)
 
         # turing machine literal
         elif self.token.type == Token.LEFT_BRACE:
-            self.turing_machine_literal()
+            term = self.turing_machine_literal()
 
         # input statements
         elif self.token.type in (Token.INPUT_BOOLEAN, Token.INPUT_INTEGER, Token.INPUT_SYMBOL, Token.INPUT_TAPE):
+            term = ast.InputStatement()
+            if self.token.type == Token.INPUT_BOOLEAN:
+                term.type = ast.Type.BOOLEAN
+            elif self.token.type == Token.INPUT_INTEGER:
+                term.type = ast.Type.INTEGER
+            elif self.token.type == Token.INPUT_SYMBOL:
+                term.type = ast.Type.SYMBOL
+            elif self.token.type == Token.INPUT_TAPE:
+                term.type = ast.Type.TAPE
             self.accept(self.token.type)
 
         # subexpression in parentheses
         elif self.token.type == Token.LEFT_BRACKET:
             self.accept(Token.LEFT_BRACKET)
-            self.expression()
+            term = self.expression()
             self.accept(Token.RIGHT_BRACKET)
 
-        # after handling term:
+        #### after handling term:
         # handle term[] and term[expression]
         if self.token.type == Token.LEFT_SQUARE_BRACKET:
+            left = term
+            term = ast.Expression()
+            term.left = left
+            term.operator = self.token
             self.accept(Token.LEFT_SQUARE_BRACKET)
             if self.token.type != Token.RIGHT_SQUARE_BRACKET:
-                self.expression()
+                term.right = self.expression()
             self.accept(Token.RIGHT_SQUARE_BRACKET)
+
         # handle term(expression)
         elif self.token.type == Token.LEFT_BRACKET:
+            left = term
+            term = ast.Expression()
+            term.left = left
+            term.operator = self.token
             self.accept(Token.LEFT_BRACKET)
-            self.expression()
+            term.right = self.expression()
             self.accept(Token.RIGHT_BRACKET)
+
         # handel term^
         elif self.token.type == Token.HEAD:
+            left = term
+            term = ast.Expression()
+            term.left = left
+            term.unary_operator = self.token
             self.accept(Token.HEAD)
 
+        return term
+
     def turing_machine_literal(self):
+        literal = ast.Literal()
+        literal.type = ast.Type.TURING_MACHINE
         self.accept(Token.LEFT_BRACE)
         self.accept(Token.IDENTIFIER)
         self.accept(Token.SYMBOL_LITERAL)
         if self.token.type == Token.COLON:
+            sequence = ast.TuringMachineInstructionSequence()
             self.accept(Token.COLON)
             while self.token.type != Token.RIGHT_BRACE:
-                self.turing_machine_instruction()
+                sequence.instructions.append(self.turing_machine_instruction())
                 if self.token.type != Token.RIGHT_BRACE:
                     self.accept(Token.SEMICOLON)
-            if self.token.type == Token.SEMICOLON:
-                self.accept(Token.SEMICOLON)
+            literal.value = sequence
         self.accept(Token.RIGHT_BRACE)
+        return literal
 
     def turing_machine_instruction_sequence(self):
+        sequence = ast.TuringMachineInstructionSequence()
         self.accept(Token.COLON)
         self.accept(Token.NEWLINE)
         self.accept(Token.INDENT)
         while self.token.type != Token.DEDENT:
-            self.turing_machine_instruction()
+            sequence.instructions.append(self.turing_machine_instruction())
             self.accept(Token.NEWLINE)
         self.accept(Token.DEDENT)
+        return sequence
 
     def turing_machine_instruction(self):
-        self.accept(Token.IDENTIFIER)
-        self.accept(Token.SYMBOL_LITERAL)
+        instruction = ast.TuringMachineInstruction()
+
+        temp = ast.Identifier()
+        temp.name = self.accept(Token.IDENTIFIER).value
+        temp.type = ast.Type.TURING_MACHINE_STATE
+        instruction.left_state = temp
+
+        temp = ast.Literal()
+        temp.value = self.accept(Token.SYMBOL_LITERAL).value
+        temp.type = ast.Type.SYMBOL
+        instruction.left_symbol = temp
+
         self.accept(Token.ASSIGNMENT)
-        self.accept((Token.IDENTIFIER, Token.MINUS))
-        self.accept((Token.SYMBOL_LITERAL, Token.MINUS))
-        self.accept((Token.LESS, Token.GREATER, Token.MINUS))
+
+        accepted = self.accept((Token.IDENTIFIER, Token.MINUS))
+        if accepted.type == Token.IDENTIFIER:
+            temp = ast.Identifier()
+            temp.name = accepted.value
+            temp.type = ast.Type.TURING_MACHINE_STATE
+            instruction.right_state = temp
+        elif accepted.type == Token.MINUS:
+            instruction.right_state = instruction.left_state
+
+        accepted = self.accept((Token.SYMBOL_LITERAL, Token.MINUS))
+        if accepted.type == Token.SYMBOL_LITERAL:
+            temp = ast.Literal()
+            temp.value = accepted.value
+            temp.type = ast.Type.SYMBOL
+            instruction.right_symbol = temp
+        elif accepted.type == Token.MINUS:
+            instruction.right_symbol = instruction.left_symbol
+
+        instruction.shift = self.accept((Token.LESS, Token.GREATER, Token.MINUS)).value
+        return instruction

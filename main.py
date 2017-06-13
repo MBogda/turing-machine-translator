@@ -26,7 +26,7 @@ def main():
     #     # print(token)
     #     token = lexer.next_token()
     parser = Parser(Lexer(program_text))
-    parser.parse()
+    print(parser.parse())
 
 if __name__ == '__main__':
     main()
