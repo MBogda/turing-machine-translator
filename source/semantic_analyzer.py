@@ -1,8 +1,8 @@
 import re
 
-from lexer import Token
-import abstract_syntax_tree as ast
-from abstract_syntax_tree import Type
+from source import ast
+from source.ast import Type
+from source.lexer import Token
 
 
 class SemanticAnalyzer:

@@ -1,7 +1,6 @@
-import collections
 import re
 
-from error import generate_error
+from source.error import generate_error
 
 token_specification = [
     ('COMMENT',                 r'/#(?:.|\n)*?#/|#.*$'),

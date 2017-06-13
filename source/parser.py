@@ -1,6 +1,7 @@
-from error import generate_error
-from lexer import Token
-import abstract_syntax_tree as ast
+from source import ast
+from source.ast import Type
+from source.error import generate_error
+from source.lexer import Token
 
 
 class Parser:
@@ -108,13 +109,13 @@ class Parser:
         accepted = self.accept((Token.OUTPUT_BOOLEAN, Token.OUTPUT_INTEGER, Token.OUTPUT_SYMBOL,
                                 Token.OUTPUT_TAPE, Token.OUTPUT_ANY))
         if accepted.type == Token.OUTPUT_BOOLEAN:
-            statement.type = ast.Type.BOOLEAN
+            statement.type = Type.BOOLEAN
         if accepted.type == Token.OUTPUT_INTEGER:
-            statement.type = ast.Type.INTEGER
+            statement.type = Type.INTEGER
         if accepted.type == Token.OUTPUT_SYMBOL:
-            statement.type = ast.Type.SYMBOL
+            statement.type = Type.SYMBOL
         if accepted.type == Token.OUTPUT_TAPE:
-            statement.type = ast.Type.TAPE
+            statement.type = Type.TAPE
         # OUTPUT_ANY is coded as None
         statement.value = self.expression()
         self.accept(Token.NEWLINE)
@@ -221,13 +222,13 @@ class Parser:
             term = ast.Literal()
             term.value = self.token.value
             if self.token.type in (Token.TRUE, Token.FALSE):
-                term.type = ast.Type.BOOLEAN
+                term.type = Type.BOOLEAN
             elif self.token.type == Token.INTEGER_LITERAL:
-                term.type = ast.Type.INTEGER
+                term.type = Type.INTEGER
             elif self.token.type == Token.SYMBOL_LITERAL:
-                term.type = ast.Type.SYMBOL
+                term.type = Type.SYMBOL
             elif self.token.type == Token.TAPE_LITERAL:
-                term.type = ast.Type.TAPE
+                term.type = Type.TAPE
             self.accept(self.token.type)
 
         # turing machine literal
@@ -238,13 +239,13 @@ class Parser:
         elif self.token.type in (Token.INPUT_BOOLEAN, Token.INPUT_INTEGER, Token.INPUT_SYMBOL, Token.INPUT_TAPE):
             term = ast.InputStatement()
             if self.token.type == Token.INPUT_BOOLEAN:
-                term.type = ast.Type.BOOLEAN
+                term.type = Type.BOOLEAN
             elif self.token.type == Token.INPUT_INTEGER:
-                term.type = ast.Type.INTEGER
+                term.type = Type.INTEGER
             elif self.token.type == Token.INPUT_SYMBOL:
-                term.type = ast.Type.SYMBOL
+                term.type = Type.SYMBOL
             elif self.token.type == Token.INPUT_TAPE:
-                term.type = ast.Type.TAPE
+                term.type = Type.TAPE
             self.accept(self.token.type)
 
         # subexpression in parentheses
@@ -289,18 +290,18 @@ class Parser:
     def turing_machine_literal(self):
         # initializing literal
         literal = ast.Literal()
-        literal.type = ast.Type.TURING_MACHINE
+        literal.type = Type.TURING_MACHINE
         self.accept(Token.LEFT_BRACE)
 
         # initial state
         state = ast.Identifier()
-        state.type = ast.Type.TURING_MACHINE_STATE
+        state.type = Type.TURING_MACHINE_STATE
         state.name = self.accept(Token.IDENTIFIER).value
         literal.initial_state = state
 
         # blank symbol
         symbol = ast.Literal()
-        symbol.type = ast.Type.SYMBOL
+        symbol.type = Type.SYMBOL
         symbol.value = self.accept(Token.SYMBOL_LITERAL).value
         literal.blank_symbol = symbol
 
@@ -333,13 +334,13 @@ class Parser:
         # left state
         temp = ast.Identifier()
         temp.name = self.accept(Token.IDENTIFIER).value
-        temp.type = ast.Type.TURING_MACHINE_STATE
+        temp.type = Type.TURING_MACHINE_STATE
         instruction.left_state = temp
 
         # left symbol
         temp = ast.Literal()
         temp.value = self.accept(Token.SYMBOL_LITERAL).value
-        temp.type = ast.Type.SYMBOL
+        temp.type = Type.SYMBOL
         instruction.left_symbol = temp
 
         self.accept(Token.ASSIGNMENT)
@@ -349,7 +350,7 @@ class Parser:
         if accepted.type == Token.IDENTIFIER:
             temp = ast.Identifier()
             temp.name = accepted.value
-            temp.type = ast.Type.TURING_MACHINE_STATE
+            temp.type = Type.TURING_MACHINE_STATE
             instruction.right_state = temp
         elif accepted.type == Token.MINUS:
             instruction.right_state = instruction.left_state
@@ -359,7 +360,7 @@ class Parser:
         if accepted.type == Token.SYMBOL_LITERAL:
             temp = ast.Literal()
             temp.value = accepted.value
-            temp.type = ast.Type.SYMBOL
+            temp.type = Type.SYMBOL
             instruction.right_symbol = temp
         elif accepted.type == Token.MINUS:
             instruction.right_symbol = instruction.left_symbol

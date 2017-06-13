@@ -1,9 +1,9 @@
 import sys
 
-from error import init_program_text
-from lexer import Lexer
-from parser import Parser
-from semantic_analyzer import SemanticAnalyzer
+from source.error import init_program_text
+from source.lexer import Lexer
+from source.parser import Parser
+from source.semantic_analyzer import SemanticAnalyzer
 
 
 def main():
