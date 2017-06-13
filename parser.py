@@ -23,6 +23,7 @@ class Parser:
             token_types = (token_types,)
         if self.token.type not in token_types:
             self.error_expected_token_type(token_types)
+            # wait for valid token
             while self.token.type not in token_types:
                 self.token = self.lexer.next_token()
                 if not self.token:
@@ -38,6 +39,7 @@ class Parser:
         return program
 
     def instruction(self):
+        # wait for valid token
         valid_tokens = (Token.IF, Token.WHILE, Token.OUTPUT_BOOLEAN, Token.OUTPUT_INTEGER, Token.OUTPUT_SYMBOL,
                         Token.OUTPUT_TAPE, Token.OUTPUT_ANY, Token.IDENTIFIER)
         if self.token.type not in valid_tokens:
@@ -196,6 +198,7 @@ class Parser:
             return self.term()
 
     def term(self):
+        # wait for valid token
         valid_tokens = (Token.MINUS, Token.IDENTIFIER, Token.TRUE, Token.INTEGER_LITERAL, Token.SYMBOL_LITERAL,
                         Token.TAPE_LITERAL, Token.LEFT_BRACE, Token.INPUT_BOOLEAN, Token.INPUT_INTEGER,
                         Token.INPUT_SYMBOL, Token.INPUT_TAPE, Token.LEFT_BRACKET)
@@ -283,13 +286,25 @@ class Parser:
 
         return term
 
-    # todo: handle in ast TM start state and empty symbol
     def turing_machine_literal(self):
+        # initializing literal
         literal = ast.Literal()
         literal.type = ast.Type.TURING_MACHINE
         self.accept(Token.LEFT_BRACE)
-        self.accept(Token.IDENTIFIER)
-        self.accept(Token.SYMBOL_LITERAL)
+
+        # initial state
+        state = ast.Identifier()
+        state.type = ast.Type.TURING_MACHINE_STATE
+        state.name = self.accept(Token.IDENTIFIER).value
+        literal.initial_state = state
+
+        # blank symbol
+        symbol = ast.Literal()
+        symbol.type = ast.Type.SYMBOL
+        symbol.value = self.accept(Token.SYMBOL_LITERAL).value
+        literal.blank_symbol = symbol
+
+        # instructions
         if self.token.type == Token.COLON:
             sequence = ast.TuringMachineInstructionSequence()
             self.accept(Token.COLON)
@@ -315,11 +330,13 @@ class Parser:
     def turing_machine_instruction(self):
         instruction = ast.TuringMachineInstruction()
 
+        # left state
         temp = ast.Identifier()
         temp.name = self.accept(Token.IDENTIFIER).value
         temp.type = ast.Type.TURING_MACHINE_STATE
         instruction.left_state = temp
 
+        # left symbol
         temp = ast.Literal()
         temp.value = self.accept(Token.SYMBOL_LITERAL).value
         temp.type = ast.Type.SYMBOL
@@ -327,6 +344,7 @@ class Parser:
 
         self.accept(Token.ASSIGNMENT)
 
+        # right state
         accepted = self.accept((Token.IDENTIFIER, Token.MINUS))
         if accepted.type == Token.IDENTIFIER:
             temp = ast.Identifier()
@@ -336,6 +354,7 @@ class Parser:
         elif accepted.type == Token.MINUS:
             instruction.right_state = instruction.left_state
 
+        # right symbol
         accepted = self.accept((Token.SYMBOL_LITERAL, Token.MINUS))
         if accepted.type == Token.SYMBOL_LITERAL:
             temp = ast.Literal()
@@ -345,5 +364,6 @@ class Parser:
         elif accepted.type == Token.MINUS:
             instruction.right_symbol = instruction.left_symbol
 
+        # shift
         instruction.shift = self.accept((Token.LESS, Token.GREATER, Token.MINUS)).value
         return instruction

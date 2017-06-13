@@ -133,10 +133,14 @@ class Literal:
     def __init__(self):
         self.value = None
         self.type = None
+        self.initial_state = None
+        self.blank_symbol = None
 
     def __str__(self):
-        return '\nLiteral:\n type={}\n value:{}'.format(
+        return '\nLiteral:\n type={}\n initial_state:{}\n blank_symbol:{}\n value:{}'.format(
             self.type,
+            str(self.initial_state).replace('\n', '\n  '),
+            str(self.blank_symbol).replace('\n', '\n  '),
             str(self.value).replace('\n', '\n  '),
         )
 
