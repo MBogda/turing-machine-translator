@@ -1,4 +1,6 @@
 # Nodes of Abstract Syntax Tree
+from typing import List
+
 
 class Type:
     (BOOLEAN, INTEGER, SYMBOL, TAPE,
@@ -69,36 +71,6 @@ class AssignmentStatement:
         )
 
 
-class TuringMachineInstructionSequence:
-    def __init__(self):
-        self.instructions = []
-
-    def __str__(self):
-        res_str = '\nTuringMachineInstructionSequence:'
-        for instr in self.instructions:
-            res_str += str(instr).replace('\n', '\n ')
-        return res_str
-
-
-class TuringMachineInstruction:
-    def __init__(self):
-        self.left_state = None
-        self.left_symbol = None
-        self.right_state = None
-        self.right_symbol = None
-        self.shift = None
-
-    def __str__(self):
-        return '\nTuringMachineInstruction:\n left_state:{}\n left_symbol:{}' \
-               '\n right_state:{}\n right_symbol:{}\n shift={}'.format(
-            str(self.left_state).replace('\n', '\n  '),
-            str(self.left_symbol).replace('\n', '\n  '),
-            str(self.right_state).replace('\n', '\n  '),
-            str(self.right_symbol).replace('\n', '\n  '),
-            self.shift,
-        )
-
-
 class Expression:
     def __init__(self):
         self.operator = None
@@ -153,13 +125,38 @@ class InputStatement:
         return '\nInputStatement:\n type={}'.format(self.type)
 
 
-# class TuringMachineState:
-#     def __init__(self):
-#         self.turing_machine = None
-#         self.name = None
+# todo: annotate all types
+class TuringMachineInstructionSequence:
+    def __init__(self):
+        # List[TuringMachineInstruction]
+        self.instructions: List[TuringMachineInstruction] = []
+        self.states = set()
+        self.symbols = set()
+
+    def __str__(self):
+        res_str = '\nTuringMachineInstructionSequence:\n states={}\n symbols={}'.format(
+            self.states,
+            self.symbols,
+        )
+        for instr in self.instructions:
+            res_str += str(instr).replace('\n', '\n ')
+        return res_str
 
 
-# class TuringMachineResult:
-#     def __init__(self):
-#         self.turing_machine = None
-#         self.tape = None
+class TuringMachineInstruction:
+    def __init__(self):
+        self.left_state = None
+        self.left_symbol = None
+        self.right_state = None
+        self.right_symbol = None
+        self.shift = None
+
+    def __str__(self):
+        return '\nTuringMachineInstruction:\n left_state:{}\n left_symbol:{}' \
+               '\n right_state:{}\n right_symbol:{}\n shift={}'.format(
+            str(self.left_state).replace('\n', '\n  '),
+            str(self.left_symbol).replace('\n', '\n  '),
+            str(self.right_state).replace('\n', '\n  '),
+            str(self.right_symbol).replace('\n', '\n  '),
+            self.shift,
+        )

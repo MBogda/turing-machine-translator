@@ -3,6 +3,7 @@ import sys
 from error import init_program_text
 from lexer import Lexer
 from parser import Parser
+from semantic_analyzer import SemanticAnalyzer
 
 
 def main():
@@ -26,7 +27,12 @@ def main():
     #     # print(token)
     #     token = lexer.next_token()
     parser = Parser(Lexer(program_text))
-    print(parser.parse())
+    # print(parser.parse())
+    ast = parser.parse()
+    # print(ast)
+    # semantic_analyzer = SemanticAnalyzer(parser.parse())
+    semantic_analyzer = SemanticAnalyzer(ast)
+    semantic_analyzer.analyze()
 
 if __name__ == '__main__':
     main()
