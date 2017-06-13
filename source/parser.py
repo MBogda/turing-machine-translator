@@ -19,7 +19,7 @@ class Parser:
             ' or '.join(str(token) for token in token_types), self.token.type
         ), self.token.line, self.token.column)
 
-    def accept(self, token_types):
+    def accept(self, token_types) -> Token:
         if not isinstance(token_types, (tuple, tuple)):
             token_types = (token_types,)
         if self.token.type not in token_types:
@@ -108,6 +108,7 @@ class Parser:
         statement = ast.OutputStatement()
         accepted = self.accept((Token.OUTPUT_BOOLEAN, Token.OUTPUT_INTEGER, Token.OUTPUT_SYMBOL,
                                 Token.OUTPUT_TAPE, Token.OUTPUT_ANY))
+        statement.token = accepted
         if accepted.type == Token.OUTPUT_BOOLEAN:
             statement.type = Type.BOOLEAN
         if accepted.type == Token.OUTPUT_INTEGER:
@@ -124,14 +125,18 @@ class Parser:
     def assignment_statement(self):
         statement = ast.AssignmentStatement()
         left = ast.Identifier()
-        left.name = self.accept(Token.IDENTIFIER).value
+        accepted = self.accept(Token.IDENTIFIER)
+        left.token = accepted
+        left.name = accepted.value
 
         # handle identifier[expression]
         if self.token.type == Token.LEFT_SQUARE_BRACKET:
             left_left = left
             left = ast.Expression()
             left.left = left_left
-            left.operator = self.accept(Token.LEFT_SQUARE_BRACKET).type
+            accepted = self.accept(Token.LEFT_SQUARE_BRACKET)
+            left.token = accepted
+            left.operator = accepted.type
             left.right = self.expression()
             self.accept(Token.RIGHT_SQUARE_BRACKET)
 
@@ -139,20 +144,24 @@ class Parser:
         elif self.token.type == Token.HEAD:
             left_left = left
             left = ast.Expression()
+            accepted = self.accept(Token.HEAD)
+            left.token = accepted
             left.left = left_left
-            left.unary_operator = self.accept(Token.HEAD).type
+            left.unary_operator = accepted.type
 
         # handle identifier: \n <turing machine instruction sequence>
         elif self.token.type == Token.COLON:
+            statement.token = self.token
             statement.left = left
             statement.operator = self.token.type
             statement.right = self.turing_machine_instruction_sequence()
             return statement
 
         statement.left = left
-        statement.operator = self.accept((Token.ASSIGNMENT, Token.ASSIGNMENT_PLUS, Token.ASSIGNMENT_MINUS,
-                                          Token.ASSIGNMENT_MULTIPLY, Token.ASSIGNMENT_DIVIDE, Token.ASSIGNMENT_MODULO)
-                                         ).type
+        accepted = self.accept((Token.ASSIGNMENT, Token.ASSIGNMENT_PLUS, Token.ASSIGNMENT_MINUS,
+                                Token.ASSIGNMENT_MULTIPLY, Token.ASSIGNMENT_DIVIDE, Token.ASSIGNMENT_MODULO))
+        statement.token = accepted
+        statement.operator = accepted.type
         statement.right = self.expression()
         self.accept(Token.NEWLINE)
         return statement
@@ -173,13 +182,18 @@ class Parser:
             if level == 2 or level == 6:
                 unary_operator = operators[level][0]
                 count = 0
+                accepted = None
                 while self.token.type == unary_operator:
-                    self.accept(unary_operator)
+                    if accepted is None:
+                        accepted = self.accept(unary_operator)
+                    else:
+                        self.accept(unary_operator)
                     count += 1
                 expr = self.expression(level + 1)
                 if count % 2 != 0:
                     left = expr
                     expr = ast.Expression()
+                    expr.token = accepted
                     expr.left = left
                     expr.unary_operator = unary_operator
             else:
@@ -189,7 +203,9 @@ class Parser:
                     left = expr
                     expr = ast.Expression()
                     expr.left = left
-                    expr.operator = self.accept(current_operators).type
+                    accepted = self.accept(current_operators)
+                    expr.token = accepted
+                    expr.operator = accepted.type
                     expr.right = self.expression(level + 1)
                     # handle only one comparison operator, not sequence of ones
                     if level == 3:
@@ -213,6 +229,7 @@ class Parser:
         # identifiers
         if self.token.type == Token.IDENTIFIER:
             term = ast.Identifier()
+            term.token = self.token
             term.name = self.token.value
             self.accept(Token.IDENTIFIER)
 
@@ -220,6 +237,7 @@ class Parser:
         elif self.token.type in (Token.TRUE, Token.FALSE, Token.INTEGER_LITERAL,
                                  Token.SYMBOL_LITERAL, Token.TAPE_LITERAL):
             term = ast.Literal()
+            term.token = self.token
             term.value = self.token.value
             if self.token.type in (Token.TRUE, Token.FALSE):
                 term.type = Type.BOOLEAN
@@ -238,6 +256,7 @@ class Parser:
         # input statements
         elif self.token.type in (Token.INPUT_BOOLEAN, Token.INPUT_INTEGER, Token.INPUT_SYMBOL, Token.INPUT_TAPE):
             term = ast.InputStatement()
+            term.token = self.token
             if self.token.type == Token.INPUT_BOOLEAN:
                 term.type = Type.BOOLEAN
             elif self.token.type == Token.INPUT_INTEGER:
@@ -260,6 +279,7 @@ class Parser:
             left = term
             term = ast.Expression()
             term.left = left
+            term.token = self.token
             term.unary_operator = self.token.type
             self.accept(Token.LEFT_SQUARE_BRACKET)
             if self.token.type != Token.RIGHT_SQUARE_BRACKET:
@@ -272,6 +292,7 @@ class Parser:
             left = term
             term = ast.Expression()
             term.left = left
+            term.token = self.token
             term.operator = self.token.type
             self.accept(Token.LEFT_BRACKET)
             term.right = self.expression()
@@ -282,6 +303,7 @@ class Parser:
             left = term
             term = ast.Expression()
             term.left = left
+            term.token = self.token
             term.unary_operator = self.token.type
             self.accept(Token.HEAD)
 
@@ -290,19 +312,23 @@ class Parser:
     def turing_machine_literal(self):
         # initializing literal
         literal = ast.Literal()
+        literal.token = self.accept(Token.LEFT_BRACE)
         literal.type = Type.TURING_MACHINE
-        self.accept(Token.LEFT_BRACE)
 
         # initial state
         state = ast.Identifier()
         state.type = Type.TURING_MACHINE_STATE
-        state.name = self.accept(Token.IDENTIFIER).value
+        accepted = self.accept(Token.IDENTIFIER)
+        state.token = accepted
+        state.name = accepted.value
         literal.initial_state = state
 
         # blank symbol
         symbol = ast.Literal()
         symbol.type = Type.SYMBOL
-        symbol.value = self.accept(Token.SYMBOL_LITERAL).value
+        accepted = self.accept(Token.SYMBOL_LITERAL)
+        symbol.token = accepted
+        symbol.value = accepted.value
         literal.blank_symbol = symbol
 
         # instructions
@@ -353,6 +379,7 @@ class Parser:
             temp.type = Type.TURING_MACHINE_STATE
             instruction.right_state = temp
         elif accepted.type == Token.MINUS:
+            # be careful! one object in two fields
             instruction.right_state = instruction.left_state
 
         # right symbol
@@ -363,6 +390,7 @@ class Parser:
             temp.type = Type.SYMBOL
             instruction.right_symbol = temp
         elif accepted.type == Token.MINUS:
+            # be careful! one object in two fields
             instruction.right_symbol = instruction.left_symbol
 
         # shift

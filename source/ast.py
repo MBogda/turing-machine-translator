@@ -1,4 +1,8 @@
 # Nodes of Abstract Syntax Tree
+# todo: annotate all types
+# todo: more beautiful printing (like tree in linux)
+# todo? initialize all params in __init__
+# todo? add tokens to all ast nodes
 from typing import List
 
 
@@ -10,6 +14,7 @@ class Type:
 
 class InstructionSequence:
     def __init__(self):
+        # self.instructions: List[Union[IfStatement, WhileStatement, OutputStatement, AssignmentStatement]] = []
         self.instructions = []
 
     def __str__(self):
@@ -47,6 +52,7 @@ class WhileStatement:
 
 class OutputStatement:
     def __init__(self):
+        self.token = None
         self.type = None
         self.value = None
 
@@ -59,6 +65,7 @@ class OutputStatement:
 
 class AssignmentStatement:
     def __init__(self):
+        self.token = None
         self.operator = None
         self.left = None
         self.right = None
@@ -73,6 +80,7 @@ class AssignmentStatement:
 
 class Expression:
     def __init__(self):
+        self.token = None
         self.operator = None
         self.unary_operator = None
         self.type = None
@@ -91,6 +99,7 @@ class Expression:
 
 class Identifier:
     def __init__(self):
+        self.token = None
         self.name = None
         self.type = None
 
@@ -103,6 +112,7 @@ class Identifier:
 
 class Literal:
     def __init__(self):
+        self.token = None
         self.value = None
         self.type = None
         self.initial_state = None
@@ -125,10 +135,8 @@ class InputStatement:
         return '\nInputStatement:\n type={}'.format(self.type)
 
 
-# todo: annotate all types
 class TuringMachineInstructionSequence:
     def __init__(self):
-        # List[TuringMachineInstruction]
         self.instructions: List[TuringMachineInstruction] = []
         self.states = set()
         self.symbols = set()
