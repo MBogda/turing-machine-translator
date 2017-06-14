@@ -1,6 +1,6 @@
 # Nodes of Abstract Syntax Tree
 # todo: annotate all types
-# todo: more beautiful printing (like tree in linux)
+# todo: more pretty printing (like tree in linux)
 # todo? initialize all params in __init__
 # todo? add tokens to all ast nodes
 from typing import List
@@ -18,9 +18,12 @@ class InstructionSequence:
         self.instructions = []
 
     def __str__(self):
-        res_str = '\nInstructionSequence:'
+        return self.pretty_str()
+
+    def pretty_str(self, depth=0):
+        res_str = '\n{}InstructionSequence:'.format('│' * (depth - 1) + '├' if depth > 0 else '')
         for instr in self.instructions:
-            res_str += str(instr).replace('\n', '\n ')
+            res_str += instr.pretty_str(depth + 1)
         return res_str
 
 
@@ -31,10 +34,16 @@ class IfStatement:
         self.else_body = None
 
     def __str__(self):
-        return '\nIfStatement:\n condition:{}\n if_body:{}\n else_body:{}'.format(
-            str(self.condition).replace('\n', '\n  '),
-            str(self.if_body).replace('\n', '\n  '),
-            str(self.else_body).replace('\n', '\n  '),
+        return self.pretty_str()
+
+    def pretty_str(self, depth=0):
+        return '\n{0}IfStatement:\n│{1}condition:{3}\n│{1}if_body:{4}\n│{2}else_body:{5}'.format(
+            '│' * (depth - 1) + '├' if depth > 0 else '',
+            '│' * (depth - 1) + '├' if depth > 0 else '',
+            '│' * (depth - 1) + '└' if depth > 0 else '',
+            self.condition.pretty_str(depth + 2),
+            self.if_body.pretty_str(depth + 2),
+            self.else_body.pretty_str(depth + 2) if self.else_body is not None else None,
         )
 
 
@@ -44,9 +53,15 @@ class WhileStatement:
         self.body = None
 
     def __str__(self):
-        return '\nWhileStatement:\n condition:{}\n body:{}'.format(
-            str(self.condition).replace('\n', '\n  '),
-            str(self.body).replace('\n', '\n  '),
+        return self.pretty_str()
+
+    def pretty_str(self, depth=0):
+        return '\n{0}WhileStatement:\n│{1}condition:{3}\n│{2}body:{4}'.format(
+            '│' * (depth - 1) + '├' if depth > 0 else '',
+            '│' * (depth - 1) + '├' if depth > 0 else '',
+            '│' * (depth - 1) + '└' if depth > 0 else '',
+            self.condition.pretty_str(depth + 2),
+            self.body.pretty_str(depth + 2),
         )
 
 
@@ -57,9 +72,15 @@ class OutputStatement:
         self.value = None
 
     def __str__(self):
-        return '\nOutputStatement:\n type={}\n value:{}'.format(
+        return self.pretty_str()
+
+    def pretty_str(self, depth=0):
+        return '\n{0}OutputStatement:\n│{1}type={3}\n│{2}value:{4}'.format(
+            '│' * (depth - 1) + '├' if depth > 0 else '',
+            '│' * (depth - 1) + '├' if depth > 0 else '',
+            '│' * (depth - 1) + '└' if depth > 0 else '',
             self.type,
-            str(self.value).replace('\n', '\n  '),
+            self.value.pretty_str(depth + 2),
         )
 
 
@@ -71,10 +92,16 @@ class AssignmentStatement:
         self.right = None
 
     def __str__(self):
-        return '\nAssignmentStatement:\n operator={}\n left:{}\n right:{}'.format(
+        return self.pretty_str()
+
+    def pretty_str(self, depth=0):
+        return '\n{0}AssignmentStatement:\n│{1}operator={3}\n│{1}left:{4}\n│{2}right:{5}'.format(
+            '│' * (depth - 1) + '├' if depth > 0 else '',
+            '│' * (depth - 1) + '├' if depth > 0 else '',
+            '│' * (depth - 1) + '└' if depth > 0 else '',
             self.operator,
-            str(self.left).replace('\n', '\n  '),
-            str(self.right).replace('\n', '\n  '),
+            self.left.pretty_str(depth + 2),
+            self.right.pretty_str(depth + 2),
         )
 
 
@@ -88,12 +115,19 @@ class Expression:
         self.right = None
 
     def __str__(self):
-        return '\nExpression:\n operator={}\n unary_operator={}\n type={}\n left:{}\n right:{}'.format(
+        return self.pretty_str()
+
+    def pretty_str(self, depth=0):
+        return '\n{0}Expression:\n│{1}operator={3}\n│{2}unary_operator={4}' \
+               '\n│{1}type={4}\n│{1}left:{5}\n│{1}right:{6}'.format(
+            '│' * (depth - 1) + '├' if depth > 0 else '',
+            '│' * (depth - 1) + '├' if depth > 0 else '',
+            '│' * (depth - 1) + '└' if depth > 0 else '',
             self.operator,
             self.unary_operator,
             self.type,
-            str(self.left).replace('\n', '\n  '),
-            str(self.right).replace('\n', '\n  '),
+            self.left.pretty_str(depth + 2),
+            self.right.pretty_str(depth + 2) if self.right is not None else None,
         )
 
 
@@ -104,7 +138,13 @@ class Identifier:
         self.type = None
 
     def __str__(self):
-        return '\nIdentifier:\n name={}\n type={}'.format(
+        return self.pretty_str()
+
+    def pretty_str(self, depth=0):
+        return '\n{0}Identifier:\n│{1}name={3}\n│{2}type={4}'.format(
+            '│' * (depth - 1) + '├' if depth > 0 else '',
+            '│' * (depth - 1) + '├' if depth > 0 else '',
+            '│' * (depth - 1) + '└' if depth > 0 else '',
             self.name,
             self.type,
         )
@@ -119,11 +159,19 @@ class Literal:
         self.blank_symbol = None
 
     def __str__(self):
-        return '\nLiteral:\n type={}\n initial_state:{}\n blank_symbol:{}\n value:{}'.format(
+        return self.pretty_str()
+
+    def pretty_str(self, depth=0):
+        return '\n{0}Literal:\n│{1}type={3}\n│{1}initial_state:{4}\n│{1}blank_symbol:{5}\n│{2}value:{6}'.format(
+            '│' * (depth - 1) + '├' if depth > 0 else '',
+            '│' * (depth - 1) + '├' if depth > 0 else '',
+            '│' * (depth - 1) + '└' if depth > 0 else '',
             self.type,
-            str(self.initial_state).replace('\n', '\n  '),
-            str(self.blank_symbol).replace('\n', '\n  '),
-            str(self.value).replace('\n', '\n  '),
+            self.initial_state.pretty_str(depth + 2) if self.initial_state is not None else None,
+            self.blank_symbol.pretty_str(depth + 2) if self.initial_state is not None else None,
+            self.value.pretty_str(depth + 2)
+            if isinstance(self.initial_state, TuringMachineInstructionSequence)
+            else self.value,
         )
 
 
@@ -132,7 +180,15 @@ class InputStatement:
         self.type = None
 
     def __str__(self):
-        return '\nInputStatement:\n type={}'.format(self.type)
+        return self.pretty_str()
+
+    def pretty_str(self, depth=0):
+        return '\n{0}InputStatement:\n│{2}type={3}'.format(
+            '│' * (depth - 1) + '├' if depth > 0 else '',
+            '│' * (depth - 1) + '├' if depth > 0 else '',
+            '│' * (depth - 1) + '└' if depth > 0 else '',
+            self.type,
+        )
 
 
 class TuringMachineInstructionSequence:
@@ -142,12 +198,18 @@ class TuringMachineInstructionSequence:
         self.symbols = set()
 
     def __str__(self):
-        res_str = '\nTuringMachineInstructionSequence:\n states={}\n symbols={}'.format(
+        return self.pretty_str()
+
+    def pretty_str(self, depth=0):
+        res_str = '\n{0}TuringMachineInstructionSequence:\n│{1}states={3}\n│{2}symbols={4}'.format(
+            '│' * (depth - 1) + '├' if depth > 0 else '',
+            '│' * (depth - 1) + '├' if depth > 0 else '',
+            '│' * (depth - 1) + '└' if depth > 0 else '',
             self.states,
             self.symbols,
         )
-        for instr in self.instructions:
-            res_str += str(instr).replace('\n', '\n ')
+        for tm_instr in self.instructions:
+            res_str += tm_instr.pretty_str(depth + 1)
         return res_str
 
 
@@ -160,11 +222,17 @@ class TuringMachineInstruction:
         self.shift = None
 
     def __str__(self):
-        return '\nTuringMachineInstruction:\n left_state:{}\n left_symbol:{}' \
-               '\n right_state:{}\n right_symbol:{}\n shift={}'.format(
-            str(self.left_state).replace('\n', '\n  '),
-            str(self.left_symbol).replace('\n', '\n  '),
-            str(self.right_state).replace('\n', '\n  '),
-            str(self.right_symbol).replace('\n', '\n  '),
+        return self.pretty_str()
+
+    def pretty_str(self, depth=0):
+        return '\n{0}TuringMachineInstruction:\n│{1}left_state:{3}\n│{1}left_symbol:{4}' \
+               '\n│{1}right_state:{5}\n│{1}right_symbol:{6}\n│{2}shift={7}'.format(
+            '│' * (depth - 1) + '├' if depth > 0 else '',
+            '│' * (depth - 1) + '├' if depth > 0 else '',
+            '│' * (depth - 1) + '└' if depth > 0 else '',
+            self.left_state.pretty_str(depth + 2),
+            self.left_symbol.pretty_str(depth + 2),
+            self.right_state.pretty_str(depth + 2),
+            self.right_symbol.pretty_str(depth + 2),
             self.shift,
         )
