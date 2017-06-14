@@ -249,7 +249,7 @@ class SemanticAnalyzer:
             elif node.type == Type.INTEGER:
                 node.value = int(node.value)
                 # if -32768 > node.value < 32767:
-                if -2 ** 15 > node.value < 2 ** 15 - 1:
+                if -2 ** 15 > node.value or node.value > 2 ** 15 - 1:
                     self.integer_literal_out_of_range_error(node.token, node.value)
             elif node.type == Type.SYMBOL:
                 # remove quotes
@@ -257,7 +257,7 @@ class SemanticAnalyzer:
                 # replace escaped characters
                 node.value = re.sub(
                     r"\\\\|\\n|\\t|\\'",
-                    lambda mo: {r'\\': '\\', r'\n': '\n', r'\t': '\t', r"'": "'"}[mo.group],
+                    lambda mo: {r'\\': '\\', r'\n': '\n', r'\t': '\t', r"'": "'"}[mo.group()],
                     node.value,
                 )
 
@@ -267,7 +267,7 @@ class SemanticAnalyzer:
                 # remove quotes
                 node.value = node.value[1:-1]
 
-                if len(node.value) == 0:
+                if len(node.value) == 0 or node.value == '^':
                     self.tape_literal_length_error(node.token)
                 head_count = node.value.count('^') - node.value.count(r'\^')
                 if head_count > 1:
@@ -276,8 +276,8 @@ class SemanticAnalyzer:
                 # todo: handle this situation: "\\\^a^"
                 # Replace escaped characters and replace \^ with ^ and ^ with \^
                 node.value = re.sub(
-                    r'\\\\|\\n|\\t|\\|\\\^|\^"',
-                    lambda mo: {r'\\': '\\', r'\n': '\n', r'\t': '\t', r'"': '"', r'\^': r'^', r'^': r'\^'}[mo.group],
+                    r'\\\\|\\n|\\t|\\"|\\\^|\^"',
+                    lambda mo: {r'\\': '\\', r'\n': '\n', r'\t': '\t', r'"': '"', r'\^': r'^', r'^': r'\^'}[mo.group()],
                     node.value,
                 )
                 # Find index of \^ and replace it with ''
