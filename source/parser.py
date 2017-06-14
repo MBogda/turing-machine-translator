@@ -359,13 +359,17 @@ class Parser:
 
         # left state
         temp = ast.Identifier()
-        temp.name = self.accept(Token.IDENTIFIER).value
+        accepted = self.accept(Token.IDENTIFIER)
+        temp.token = accepted
+        temp.name = accepted.value
         temp.type = Type.TURING_MACHINE_STATE
         instruction.left_state = temp
 
         # left symbol
         temp = ast.Literal()
-        temp.value = self.accept(Token.SYMBOL_LITERAL).value
+        accepted = self.accept(Token.SYMBOL_LITERAL)
+        temp.token = accepted
+        temp.value = accepted.value
         temp.type = Type.SYMBOL
         instruction.left_symbol = temp
 
@@ -373,25 +377,25 @@ class Parser:
 
         # right state
         accepted = self.accept((Token.IDENTIFIER, Token.MINUS))
+        temp = ast.Identifier()
+        temp.token = accepted
+        temp.type = Type.TURING_MACHINE_STATE
         if accepted.type == Token.IDENTIFIER:
-            temp = ast.Identifier()
             temp.name = accepted.value
-            temp.type = Type.TURING_MACHINE_STATE
-            instruction.right_state = temp
         elif accepted.type == Token.MINUS:
-            # be careful! one object in two fields
-            instruction.right_state = instruction.left_state
+            temp.name = instruction.left_state.name
+        instruction.right_state = temp
 
         # right symbol
         accepted = self.accept((Token.SYMBOL_LITERAL, Token.MINUS))
+        temp = ast.Literal()
+        temp.token = accepted
+        temp.type = Type.SYMBOL
         if accepted.type == Token.SYMBOL_LITERAL:
-            temp = ast.Literal()
             temp.value = accepted.value
-            temp.type = Type.SYMBOL
-            instruction.right_symbol = temp
         elif accepted.type == Token.MINUS:
-            # be careful! one object in two fields
-            instruction.right_symbol = instruction.left_symbol
+            temp.value = instruction.left_symbol.value
+        instruction.right_symbol = temp
 
         # shift
         instruction.shift = self.accept((Token.LESS, Token.GREATER, Token.MINUS)).value
