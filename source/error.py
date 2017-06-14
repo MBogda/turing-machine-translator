@@ -23,6 +23,7 @@ def init_program_text(prog_text):
 
 
 def generate_error(error_type, error_message, line, column):
+    global lexer_errors, parser_errors, semantic_errors
     if error_type == 'Lexer':
         lexer_errors = True
     elif error_type == 'Parser':

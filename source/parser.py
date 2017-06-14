@@ -15,7 +15,7 @@ class Parser:
     def error_expected_token_type(self, token_types):
         if not isinstance(token_types, (tuple, list)):
             token_types = (token_types,)
-        generate_error('Parser', 'expected {}, got {}'.format(
+        generate_error('Parser', 'expected token {}, got {}'.format(
             ' or '.join(str(token) for token in token_types), self.token.type
         ), self.token.line, self.token.column)
 

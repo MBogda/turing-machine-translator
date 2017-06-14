@@ -20,7 +20,7 @@ class SemanticAnalyzer:
         self.variable_table = {}
 
     def analyze(self):
-        if get_lexer_errors() or get_parser_errors():
+        if not get_lexer_errors() and not get_parser_errors():
             self._analyze(self.ast)
             return self.ast
 
