@@ -1,6 +1,6 @@
 import re
 
-from source.error import generate_error
+from source.error import generate_error, init_program_text
 
 token_specification = [
     ('COMMENT',                 r'/#(?:.|\n)*?#/|#.*$'),
@@ -99,8 +99,9 @@ class Lexer:
     rg = re.compile(token_specification_string, re.MULTILINE)
     del token_specification_string
 
-    def __init__(self, text):
-        self.text = text
+    def __init__(self, program_text: str):
+        init_program_text(program_text)
+        self.text = program_text
         self.token = Token(Token.END_OF_FILE, '', 0, 0)
         self.mo = self.rg.match(self.text)
         self.line_num = 1

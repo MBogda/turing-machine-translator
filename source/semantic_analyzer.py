@@ -1,20 +1,28 @@
 import re
 from typing import Union, List, Tuple
 
-from source.error import generate_error
+from source.error import generate_error, get_lexer_errors, get_parser_errors
 from source import ast
 from source.ast import Type
 from source.lexer import Token
+from source.parser import Parser
 
 
 class SemanticAnalyzer:
 
-    def __init__(self, program_ast):
-        self.ast = program_ast
+    def __init__(self, program_text: str):
+        # self.ast = Parser(program_text).parse()
+        try:
+            self.ast = Parser(program_text).parse()
+        except AssertionError as ex:
+            if ex.args[0] == 'End of program text':
+                pass
         self.variable_table = {}
 
     def analyze(self):
-        self._analyze(self.ast)
+        if get_lexer_errors() or get_parser_errors():
+            self._analyze(self.ast)
+            return self.ast
 
     @staticmethod
     def incompatible_types_error(token: Token, type1: str, type2: str):
@@ -144,38 +152,38 @@ class SemanticAnalyzer:
                     if node.left.type != node.right.type:
                         self.incompatible_types_error(node.token, node.left.type, node.right.type)
                     if node.left.type != Type.BOOLEAN:
-                        self.invalid_type_error(node.token, node.left.type, Type.BOOLEAN)
+                        self.invalid_type_error(node.left.token, node.left.type, Type.BOOLEAN)
                     if node.right.type != Type.BOOLEAN:
-                        self.invalid_type_error(node.token, node.right.type, Type.BOOLEAN)
+                        self.invalid_type_error(node.right.token, node.right.type, Type.BOOLEAN)
                 # ==, !=
                 elif operator in (Token.EQUAL, Token.NOT_EQUAL):
                     node.type = Type.BOOLEAN
                     if node.left.type != node.right.type:
                         self.incompatible_types_error(node.token, node.left.type, node.right.type)
-                    if node.left not in (Type.INTEGER, Type.SYMBOL, Type.TAPE):
-                        self.invalid_type_error(node.token, node.left.type, (Type.INTEGER, Type.SYMBOL, Type.TAPE))
-                    if node.right not in (Type.INTEGER, Type.SYMBOL, Type.TAPE):
-                        self.invalid_type_error(node.token, node.right.type, (Type.INTEGER, Type.SYMBOL, Type.TAPE))
+                    if node.left.type not in (Type.INTEGER, Type.SYMBOL, Type.TAPE):
+                        self.invalid_type_error(node.left.token, node.left.type, (Type.INTEGER, Type.SYMBOL, Type.TAPE))
+                    if node.right.type not in (Type.INTEGER, Type.SYMBOL, Type.TAPE):
+                        self.invalid_type_error(node.right.token, node.right.type, (Type.INTEGER, Type.SYMBOL, Type.TAPE))
                 # <, >, <=, >=
                 elif operator in (Token.LESS, Token.GREATER, Token.LESS_OR_EQUAL, Token.GREATER_OR_EQUAL):
                     node.type = Type.BOOLEAN
                     if node.left.type != node.right.type:
                         self.incompatible_types_error(node.token, node.left.type, node.right.type)
                     if node.left.type != Type.INTEGER:
-                        self.invalid_type_error(node.token, node.left.type, Type.INTEGER)
+                        self.invalid_type_error(node.left.token, node.left.type, Type.INTEGER)
                     if node.right.type != Type.INTEGER:
-                        self.invalid_type_error(node.token, node.right.type, Type.INTEGER)
+                        self.invalid_type_error(node.right.token, node.right.type, Type.INTEGER)
                 # +
                 elif operator == Token.PLUS:
                     node.type = node.left.type
                     if node.left.type != node.right.type:
                         self.incompatible_types_error(node.token, node.left.type, node.right.type)
                     if node.left.type not in (Type.INTEGER, Type.TAPE, Type.TURING_MACHINE):
-                        self.invalid_type_error(node.token, node.left.type,
+                        self.invalid_type_error(node.left.token, node.left.type,
                                                 (Type.INTEGER, Type.TAPE, Type.TURING_MACHINE))
                         node.type = node.right.type
                     if node.right.type not in (Type.INTEGER, Type.TAPE, Type.TURING_MACHINE):
-                        self.invalid_type_error(node.token, node.right.type,
+                        self.invalid_type_error(node.right.token, node.right.type,
                                                 (Type.INTEGER, Type.TAPE, Type.TURING_MACHINE))
                         if node.type == node.right.type:
                             node.type = Type.INTEGER
@@ -185,10 +193,10 @@ class SemanticAnalyzer:
                     if node.left.type != node.right.type:
                         self.incompatible_types_error(node.token, node.left.type, node.right.type)
                     if node.left.type not in (Type.INTEGER, Type.TAPE):
-                        self.invalid_type_error(node.token, node.left.type, (Type.INTEGER, Type.TAPE))
+                        self.invalid_type_error(node.left.token, node.left.type, (Type.INTEGER, Type.TAPE))
                         node.type = node.right.type
                     if node.right.type not in (Type.INTEGER, Type.TAPE):
-                        self.invalid_type_error(node.token, node.right.type, (Type.INTEGER, Type.TAPE))
+                        self.invalid_type_error(node.right.token, node.right.type, (Type.INTEGER, Type.TAPE))
                         if node.type == node.right.type:
                             node.type = Type.INTEGER
                 # *, /, %
@@ -197,9 +205,9 @@ class SemanticAnalyzer:
                     if node.left.type != node.right.type:
                         self.incompatible_types_error(node.token, node.left.type, node.right.type)
                     if node.left.type != Type.INTEGER:
-                        self.invalid_type_error(node.token, node.left.type, Type.INTEGER)
+                        self.invalid_type_error(node.left.token, node.left.type, Type.INTEGER)
                     if node.right.type != Type.INTEGER:
-                        self.invalid_type_error(node.token, node.right.type, Type.INTEGER)
+                        self.invalid_type_error(node.right.token, node.right.type, Type.INTEGER)
                 # tape[integer]
                 elif operator == Token.LEFT_SQUARE_BRACKET:
                     node.type = Type.SYMBOL

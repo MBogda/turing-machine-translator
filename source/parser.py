@@ -1,13 +1,13 @@
 from source import ast
 from source.ast import Type
 from source.error import generate_error
-from source.lexer import Token
+from source.lexer import Lexer, Token
 
 
 class Parser:
-    def __init__(self, lexer):
-        self.lexer = lexer
-        self.token = lexer.next_token()
+    def __init__(self, program_text: str):
+        self.lexer = Lexer(program_text)
+        self.token = self.lexer.next_token()
 
     def parse(self):
         return self.program()
@@ -28,7 +28,7 @@ class Parser:
             while self.token.type not in token_types:
                 self.token = self.lexer.next_token()
                 if not self.token:
-                    exit()
+                    assert False, 'End of program text'
         accepted_token = self.token
         self.token = self.lexer.next_token()
         return accepted_token
@@ -48,7 +48,7 @@ class Parser:
             while self.token.type not in valid_tokens:
                 self.token = self.lexer.next_token()
                 if not self.token:
-                    exit()
+                    assert False, 'End of program text'
 
         if self.token.type == Token.IF:
             return self.if_statement()
@@ -224,7 +224,7 @@ class Parser:
             while self.token.type not in valid_tokens:
                 self.token = self.lexer.next_token()
                 if not self.token:
-                    exit()
+                    assert False, 'End of program text'
 
         # identifiers
         if self.token.type == Token.IDENTIFIER:

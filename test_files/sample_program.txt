@@ -4,7 +4,7 @@ bool : true | false
 int : 123 | -554
 symbol : 'sdvsv' (not empty)
 tape : "symbol1|symbol2|^symbol3"
-turing machine : {identifier symbol}
+turing machine : {identifier symbol} or {identifier symbol: rule1; rule2; rule3}
 
 input:
 bool = >b
@@ -17,7 +17,7 @@ output:
 <i int
 <' symbol
 <" tape
-< anything
+<< anything
 
 special symbols in symbol or tape literals:
 \' is ' in symbol literal (but you can use ' in tape literal)
@@ -49,11 +49,11 @@ m[1 4 5] = 10
 tape = >"	# for example "1|0|0|1" (equals "^1|0|0|1")
 result = mod_3(tape)	# return "1|0|0|1|^ "
 if result[0] == '0':
-	<< 'Number is devided by 3'
+	<< "Number is devided by 3"
 else:
-	<< 'Number is not devided by 3'
+	<< "Number is not devided by 3"
 
-<< 'Do you want to check number for devision by 5?'
+<< "Do you want to check number for devision by 5?"
 if >b:
 	clean_up = {q0 ' '}
 	clean_up:
@@ -91,14 +91,14 @@ if >b:
 	result = mod_3_and_5(tape)
 	
 	if result[-1] == '0':
-		<< 'Number is devided by 3'
+		<< "Number is devided by 3"
 	else:
-		<< 'Number is not devided by 3'
+		<< "Number is not devided by 3"
 	
 	if result[0] == '0':
-		<< 'Number is devided by 5'
+		<< "Number is devided by 5"
 	else:
-		<< 'Number is not devided by 5'
+		<< "Number is not devided by 5"
 		
 	<< mod_3_and_5
 	/# output:
@@ -113,8 +113,15 @@ if >b:
 tape = "^1|0|1"
 tape2 = ("1|0" + tape)^ + 2
 tape3 = "1|0" - tape
-<b tape2 == tape3 # true
+<b tape2 == tape3   # incompatible types: tape2 is integer
+<b tape2 == tape3^  # true
 
 new_tape = 'kuku|vasya'
 new_tape^ = 1
 new_tape^ -= 1
+
+tape2 = 'olol'  # incompatible types: tape2 is integer, try to assign symbol
+tape3 = mod_3_and_5(tape3)
+tape3 = mode_3and_5()
+
+

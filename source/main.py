@@ -1,8 +1,5 @@
 import sys
 
-from source.error import init_program_text
-from source.lexer import Lexer
-from source.parser import Parser
 from source.semantic_analyzer import SemanticAnalyzer
 
 
@@ -19,20 +16,8 @@ def main():
         print("No such file: '{}'".format(program_file))
         return
 
-    init_program_text(program_text)
-
-    # lexer = Lexer(program_text)
-    # token = lexer.next_token()
-    # while token:
-    #     # print(token)
-    #     token = lexer.next_token()
-    parser = Parser(Lexer(program_text))
-    # print(parser.parse())
-    ast = parser.parse()
+    ast = SemanticAnalyzer(program_text).analyze()
     # print(ast)
-    # semantic_analyzer = SemanticAnalyzer(parser.parse())
-    semantic_analyzer = SemanticAnalyzer(ast)
-    semantic_analyzer.analyze()
 
 if __name__ == '__main__':
     main()
